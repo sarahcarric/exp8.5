@@ -1,0 +1,17 @@
+{"chris@gmail.com": 
+  {"accountInfo": {"email":"chris@gmail.com","password":"GoBeavs1","securityQuestion":"First pet?","securityAnswer":"Daisy"},
+   "identityInfo":{"displayName":"Chris","profilePic":"images/DefaultProfilePic.jpg"},
+   "speedgolfInfo":{"bio":"","homeCourse":"","firstRound":"","personalBest":{"strokes":0,"minutes":0,"seconds":0,"course":""},"clubs":{},"clubComments":""},
+   "rounds":[],
+   "roundCount":0
+  },
+ "speedscore@gmail.com" : 
+  {"accountInfo": {"email":"speedscore@gmail.com","password":"dib4462G2awDFX2","securityQuestion":"First pet?","securityAnswer":"Karma"},
+   "identityInfo":{"displayName":"Speedgolfer","profilePic":"images/DefaultProfilePic.jpg"},
+   "speedgolfInfo":{"bio":"","firstRound":"","homeCourse":"","personalBest":{"strokes":"0","minutes":"0","seconds":"0","course":""},"clubs":{},"clubComments":""},
+   "rounds":[
+     {"date":"2023-12-12","course":"Red Wolf","type":"practice","holes":"18","strokes":"80","minutes":"60","seconds":"00","SGS":"140:00","notes":"","roundNum":5},{"date":"2023-12-12","course":"Red Wolf","type":"practice","holes":"18","strokes":"80","minutes":"60","seconds":"00","SGS":"140:00","notes":"","roundNum":6},{"date":"2023-12-12","course":"Circling Raven","type":"practice","holes":"18","strokes":"80","minutes":"60","seconds":"00","SGS":"140:00","notes":"","roundNum":7}
+    ],
+   "roundCount":7
+  }
+}
