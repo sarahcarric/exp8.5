@@ -2,7 +2,7 @@
   "name": "speedscore-backend",
   "version": "1.0.0",
   "description": "Back-end middleware for SpeedScore app",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js"
@@ -15,6 +15,7 @@
   "author": "C. Hundhausen",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.3.1",
     "express": "^4.18.2"
   },
   "devDependencies": {
