@@ -81,7 +81,6 @@ app.post('/users', (req, res) => {
         res.status(500).send("Users database cannot be accessed. Contact the system administrator.");
         return;
   }
-  console.log("In POST with body: " + JSON.stringify(req.body));
   if (!Object.hasOwn(req.body,"accountInfo" || 
       !Object.hasOwn(req.body.accountInfo,"email") || 
       !Object.hasOwn(req.body.accountInfo,"password") ||
