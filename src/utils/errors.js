@@ -13,20 +13,6 @@ export class UserPasswordInvalidError extends Error {
   }
 }
 
-export class UserExistsError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'UserExistsError';
-  }
-}
-
-export class UserObjectInvalidError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'UserObjectInvalidError';
-  }
-}
-
 //Round object errors
 export class RoundNotFoundError extends Error {
   constructor(message) {

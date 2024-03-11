@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import userRouter from './routes/userRoutes.js';
-import { UserObjectInvalidError, UserExistsError, RoundObjectInvalidError, UserNotFoundError } from './routes/errors.js';
+import { UserObjectInvalidError, UserExistsError, RoundObjectInvalidError, UserNotFoundError } from './utils/errors.js';
 //import roundRouter from './routes/roundRoutes.js';
 
 dotenv.config();

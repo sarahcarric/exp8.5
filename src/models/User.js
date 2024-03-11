@@ -29,19 +29,40 @@ const userSchema = new mongoose.Schema({
     }
   },
   identityInfo: {
-    displayName: String,
-    profilePic: String
+    displayName: {
+      type: String,
+      default: ""
+    },
+    profilePic: {
+      type: String,
+      default: "images/DefaultProfilePic.jpg",
+    }
   },
   speedgolfInfo: {
     bio: {
       type: String, 
-      maxLength: 500},
-    homeCourse: String,
-    firstRound: Date,
+      maxLength: 500,
+      default: ""},
+    homeCourse: {
+      type: String,
+      default: ""},
+    firstRound: {
+      type: Date,
+      default: Date.now
+    },
     personalBest: {
-      strokes: Number,
-      seconds: Number,
-      course: String
+      strokes: {
+        type: Number,
+        default: 100
+      },
+      seconds: {
+        type: Number,
+        default: 5400
+      },
+      course: {
+        type: String,
+        default: ""
+      }
     },
     clubs: {
       "1W": {type: Boolean, default: false},
@@ -64,12 +85,17 @@ const userSchema = new mongoose.Schema({
       LW: {type: Boolean, default: false},
       Putter: {type: Boolean, default: false}
     },
-    clubComments: String,
+    clubComments: {
+      type: String,
+      default: ""
+    }
   },
   rounds: [roundSchema]
 });
 
 const User = mongoose.model('User', userSchema);
-User.init();
+
+User.init().catch(error => console.log(error));
+
 export default User;
 
