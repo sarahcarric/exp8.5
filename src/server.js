@@ -2,8 +2,8 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import userRouter from './routes/userRoutes.js';
-import { UserObjectInvalidError, UserExistsError, RoundObjectInvalidError, UserNotFoundError } from './utils/errors.js';
-//import roundRouter from './routes/roundRoutes.js';
+import errorHandler from './middleware/errorHandler.js';
+import roundRouter from './routes/roundRoutes.js';
 
 dotenv.config();
 const connectStr = process.env.MONGODB_URI;
@@ -23,19 +23,10 @@ app.use(express.json());
 
 //Install app routes
 app.use(userRouter);
-//app.use(roundRouter);
+app.use(roundRouter);
 
-//Error handling middleware
-app.use((err, req, res, next) => {
-  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    res.status(400).send({ error: 'Invalid JSON in message body' });
-  } else if (err instanceof UserObjectInvalidError || err instanceof UserExistsError || 
-             err instanceof UserNotFoundError || err instanceof mongoose.Error.ValidationError) {
-    res.status(400).send({ error: err.message });
-  } else {
-    res.status(500).send({ error: err.message });
-  }
-});
+//Install error-handling middleware
+app.use(errorHandler);
 
 //Start server
 const port = process.env.PORT || 3000;
