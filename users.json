@@ -1,5 +1,4 @@
-{
-  "chris@gmail.com": {
+[{
     "accountInfo": {
       "email": "chris@speedscore.org",
       "password": "GoBeavs1",
@@ -39,7 +38,7 @@
     ],
     "roundCount": 1
   },
-  "chris@speedscore.org": {
+  {
     "accountInfo": {
       "email": "chris@speedscore.org",
       "password": "GoBeavs1",
@@ -78,5 +77,4 @@
       }
     ],
     "roundCount": 1
-  }
-}
+  }]

@@ -2,10 +2,12 @@
   "name": "speedscore-backend",
   "version": "1.0.0",
   "description": "Back-end middleware for SpeedScore app",
-  "main": "server.js",
+  "main": "src/server.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
   },
   "keywords": [
     "middleware",
