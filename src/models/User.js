@@ -1,3 +1,7 @@
+/*****************************************************************************
+ * @file User.js
+ * @description Defines the User model schema using Mongoose.
+ ****************************************************************************/
 import mongoose from 'mongoose';
 import roundSchema from './Round.js';
 
@@ -98,4 +102,3 @@ const User = mongoose.model('User', userSchema);
 User.init().catch(error => console.log(error));
 
 export default User;
-

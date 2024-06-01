@@ -1,3 +1,7 @@
+/*****************************************************************************
+ * @file Round.js
+ * @description Defines the Round model schema using Mongoose.
+ ****************************************************************************/
 import mongoose from 'mongoose';
 
 const roundSchema = new mongoose.Schema({

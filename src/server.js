@@ -1,10 +1,17 @@
+/*************************************************************************
+ * @file: server.js
+ * @descr: This file contains the main server code for SpeedScore's API.
+ * @module: server
+ * @requires: express, mongoose, dotenv, userRouter, roundRouter, errorHandler
+  *************************************************************************/
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import userRouter from './routes/userRoutes.js';
-import errorHandler from './middleware/errorHandler.js';
 import roundRouter from './routes/roundRoutes.js';
+import errorHandler from './middleware/errorHandler.js';
 
+//Load environment variables from .env file
 dotenv.config();
 const connectStr = process.env.MONGODB_URI;
 
