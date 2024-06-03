@@ -39,6 +39,15 @@ export const addRound = async (req, res, next) => {
   } 
 }
 
+export const updateRound = async (req, res, next) => {
+  try {
+    const updatedUser = await roundService.updateRound(req.params.userId, req.params.roundId, req.body);
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    next(err);
+  }
+}
+
 /***********************************************************************
  * deleteRound (DELETE /users/:userId/rounds/:roundId)
  * @desc Deletes a round for a specific user.

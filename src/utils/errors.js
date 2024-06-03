@@ -27,3 +27,10 @@ export class RoundObjectInvalidError extends Error {
     this.name = 'RoundObjectInvalidError';
   }
 }
+
+export class ObjectIdInvalidError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ObjectIdInvalidError';
+  }
+}

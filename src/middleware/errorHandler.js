@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { UserNotFoundError, UserPasswordInvalidError } from '../utils/errors.js';
+import { UserNotFoundError, UserPasswordInvalidError, ObjectIdInvalidError} from '../utils/errors.js';
 
 /*************************************************************************
  * @function errorHandler
@@ -17,13 +17,20 @@ import { UserNotFoundError, UserPasswordInvalidError } from '../utils/errors.js'
 
 export default function errorHandler(err, req, res, next) {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    res.status(400).send({ error: 'Invalid JSON in message body' });
-  } else if (err instanceof UserNotFoundError || err instanceof UserPasswordInvalidError || 
-             err instanceof mongoose.Error.ValidationError) {
-    res.status(400).send({ error: err.message });
-  } else if (err.code === 11000 || err.code === 11001) { //MongoDB duplicate key error
-    res.status(400).send({ error: 'A user with that email already exists' });
-  } else {
-    res.status(500).send({ error: err.message });
+    return res.status(400).send({ error: 'Invalid JSON in message body' });
+  } 
+  if (err instanceof mongoose.Error.CastError && err.kind === 'ObjectId') {
+    return res.status(400).send({ error: 'Invalid ID format' });
   }
+  if (err instanceof ObjectIdInvalidError) {
+    return res.status(400).send({ error: err.message });
+  }
+  if (err instanceof UserNotFoundError || err instanceof UserPasswordInvalidError || 
+             err instanceof mongoose.Error.ValidationError) {
+    return res.status(400).send({ error: err.message });
+  } 
+  if (err.code === 11000 || err.code === 11001) { //MongoDB duplicate key error
+    return res.status(400).send({ error: 'A user with that email already exists' });
+  } 
+  return res.status(500).send({ error: err.message });
 };

@@ -5,7 +5,7 @@
  * @module userService
  *************************************************************************/
 import User from '../models/User.js';
-import { UserNotFoundError, RefreshTokenRequiredError, RefreshTokenInvalidError } from '../utils/errors.js';
+import { UserNotFoundError } from '../utils/errors.js';
 
 export default {
   
@@ -22,27 +22,14 @@ export default {
     const user = await User.findOne({ 'accountInfo.email': email });
     if (!user) {
       throw new UserNotFoundError('User with email ' + email + ' not found');
-    }
-    const validPassword = password === user.accountInfo.password)
-    if (!validPassword) {
+    } 
+    if (password !== user.accountInfo.password) {
       throw new UserNotFoundError('Invalid password');
     }
     const userObject = user.toObject();
     delete userObject.__v;
     delete userObject.accountInfo.password;
-    //Generate auth token and set it to expire in one hour
     return userObject;
-  },
-
-  /***********************************************************************
-   * logoutUser
-   * @descr Log out a user by removing their refresh token from the database.
-   * @param {string} userId - The ID of the user to log out.
-   * @returns {Promise<void>}
-   **********************************************************************/
-   logoutUser: async (userId) => {
-    // Find the refresh token for the user and remove it
-    await RefreshToken.findOneAndDelete({ userId: userId });
   },
 
   /***********************************************************************
@@ -53,8 +40,6 @@ export default {
    * @throws {UserNotFoundError} If the user is not found.
    *************************************************************************/
   addUser: async (userObject) => {
-    const salt = await bcrypt.genSalt(10);
-    userObject.accountInfo.password = await bcrypt.hash(userObject.accountInfo.password, salt);
     const user = new User(userObject);
     await user.save();
     delete userObject.accountInfo.password;
