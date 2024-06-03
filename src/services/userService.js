@@ -5,7 +5,7 @@
  * @module userService
  *************************************************************************/
 import User from '../models/User.js';
-import { UserNotFoundError } from '../utils/errors.js';
+import { UserNotFoundError, ObjectIdInvalidError } from '../utils/errors.js';
 
 export default {
   
@@ -71,6 +71,9 @@ export default {
    * @throws {UserNotFoundError} If the user is not found.
    *************************************************************************/
    getUser: async (id) => {
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new ObjectIdInvalidError('User ID is invalid; it must be a 24-character hexidecimal string');
+      }
       const user = await User.findById(id);
       if (!user) {
         throw new UserNotFoundError('User with id ' + id + ' not found');
