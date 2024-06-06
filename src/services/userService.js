@@ -8,7 +8,6 @@ import User from '../models/User.js';
 import { UserNotFoundError, ObjectIdInvalidError } from '../utils/errors.js';
 
 export default {
-  
    /***********************************************************************
    * loginUser
    * @descr Log in an existing user.
@@ -19,17 +18,17 @@ export default {
    * @throws {UserNotFoundError} If the user is not found.
    *************************************************************************/
   loginUser: async (email, password) => {
-    const user = await User.findOne({ 'accountInfo.email': email });
+    const user = await User.findOne({ 'accountInfo.email': email }).lean();
     if (!user) {
       throw new UserNotFoundError('User with email ' + email + ' not found');
     } 
     if (password !== user.accountInfo.password) {
       throw new UserNotFoundError('Invalid password');
     }
-    const userObject = user.toObject();
-    delete userObject.__v;
-    delete userObject.accountInfo.password;
-    return userObject;
+    delete user.accountInfo.password;
+    delete user.accountInfo.securityQuestion;
+    delete user.accountInfo.securityAnswer;
+    return user;
   },
 
   /***********************************************************************
@@ -39,10 +38,14 @@ export default {
    * @returns {Promise<Object>} The added user object.
    * @throws {UserNotFoundError} If the user is not found.
    *************************************************************************/
-  addUser: async (userObject) => {
-    const user = new User(userObject);
+  addUser: async (newUser) => {
+    const user = new User(newUser);
     await user.save();
+    const userObject = user.toObject();
     delete userObject.accountInfo.password;
+    delete userObject.accountInfo.securityQuestion;
+    delete userObject.accountInfo.securityAnswer;
+    delete userObject.__v;
     return userObject;
   },
 
@@ -52,12 +55,13 @@ export default {
    * @returns {Promise<Array<Object>>} An array of user objects.
    *************************************************************************/
   getUsers: async () => {
-    const users = await User.find();
+    const users = await User.find().lean();
     return users.map(user => {
-                      const userObject = user.toObject();
-                      delete userObject.accountInfo.password;
-                      delete userObject.__v;
-                      return userObject;
+                      const newUser = {...user};
+                      delete newUser.accountInfo.password;
+                      delete newUser.accountInfo.securityQuestion;
+                      delete newUser.accountInfo.securityAnswer;
+                      return newUser;
                     }
                   );
   },
@@ -74,13 +78,14 @@ export default {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new ObjectIdInvalidError('User ID is invalid; it must be a 24-character hexidecimal string');
       }
-      const user = await User.findById(id);
+      const user = await User.findById(id).lean();
       if (!user) {
         throw new UserNotFoundError('User with id ' + id + ' not found');
       }
-      const userObject = user.toObject();
+      const userObject = {...user};
       delete userObject.accountInfo.password;
-      delete userObject.__v;
+      delete userObject.accountInfo.securityQuestion;
+      delete userObject.accountInfo.securityAnswer;
       return userObject;
   },
 
@@ -98,6 +103,8 @@ export default {
     }
     const userObject = user.toObject();
     delete userObject.accountInfo.password;
+    delete userObject.accountInfo.securityQuestion;
+    delete userObject.accountInfo.securityAnswer;
     delete userObject.__v;
     return userObject;
   },
