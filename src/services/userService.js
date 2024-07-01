@@ -5,7 +5,7 @@
  * @module userService
  *************************************************************************/
 import User from '../models/User.js';
-import { UserNotFoundError, ObjectIdInvalidError } from '../utils/errors.js';
+import { UserNotFoundError, UserPasswordInvalidError } from '../utils/errors.js';
 
 export default {
    /***********************************************************************
@@ -23,12 +23,14 @@ export default {
       throw new UserNotFoundError('User with email ' + email + ' not found');
     } 
     if (password !== user.accountInfo.password) {
-      throw new UserNotFoundError('Invalid password');
+      throw new UserPasswordInvalidError('Invalid password');
     }
-    delete user.accountInfo.password;
-    delete user.accountInfo.securityQuestion;
-    delete user.accountInfo.securityAnswer;
-    return user;
+    const userObject = {...user};
+    delete userObject.accountInfo.password;
+    delete userObject.accountInfo.securityQuestion;
+    delete userObject.accountInfo.securityAnswer;
+    delete userObject.__v;
+    return userObject;
   },
 
   /***********************************************************************
@@ -36,7 +38,6 @@ export default {
    * @descr Add a new user to the database.
    * @param {Object} userObject - The user object to be added.
    * @returns {Promise<Object>} The added user object.
-   * @throws {UserNotFoundError} If the user is not found.
    *************************************************************************/
   addUser: async (newUser) => {
     const user = new User(newUser);
@@ -51,61 +52,19 @@ export default {
 
   /***********************************************************************
    * getUsers 
-   * @desc Get all users.
+   * @descr Get all users.
    * @returns {Promise<Array<Object>>} An array of user objects.
    *************************************************************************/
   getUsers: async () => {
     const users = await User.find().lean();
     return users.map(user => {
-                      const newUser = {...user};
-                      delete newUser.accountInfo.password;
-                      delete newUser.accountInfo.securityQuestion;
-                      delete newUser.accountInfo.securityAnswer;
-                      return newUser;
+                      const userObject = {...user};
+                      delete userObject.accountInfo.password;
+                      delete userObject.accountInfo.securityQuestion;
+                      delete userObject.accountInfo.securityAnswer;
+                      delete userObject.__v;
+                      return userObject;
                     }
                   );
-  },
-
-  /***********************************************************************
-   * getUser
-   * @desc Get a user by ID.
-   * @async
-   * @param {string} id - The ID of the user to retrieve.
-   * @returns {Promise<Object>} The user object.
-   * @throws {UserNotFoundError} If the user is not found.
-   *************************************************************************/
-   getUser: async (id) => {
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new ObjectIdInvalidError('User ID is invalid; it must be a 24-character hexidecimal string');
-      }
-      const user = await User.findById(id).lean();
-      if (!user) {
-        throw new UserNotFoundError('User with id ' + id + ' not found');
-      }
-      const userObject = {...user};
-      delete userObject.accountInfo.password;
-      delete userObject.accountInfo.securityQuestion;
-      delete userObject.accountInfo.securityAnswer;
-      return userObject;
-  },
-
-  /***********************************************************************
-   * deleteUser
-   * @desc Delete a user by ID.
-   * @param {string} id - The ID of the user to delete.
-   * @returns {Promise<Object>} The deleted user object.
-   * @throws {UserNotFoundError} If the user is not found.
-   *************************************************************************/
-  deleteUser: async (id) => {
-    const user = await User.findByIdAndDelete(id);
-    if (!user) {
-      throw new UserNotFoundError('User with id ' + id + ' not found');
-    }
-    const userObject = user.toObject();
-    delete userObject.accountInfo.password;
-    delete userObject.accountInfo.securityQuestion;
-    delete userObject.accountInfo.securityAnswer;
-    delete userObject.__v;
-    return userObject;
-  },
+  }
 };

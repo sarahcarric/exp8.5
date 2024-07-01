@@ -9,8 +9,10 @@ userRouter.post('/users/login', userController.loginUser);
 
 userRouter.post('/users', userController.addUser);
 
-userRouter.get('/users/:userId', userController.getUser);
+//userRouter.post('/users/logout', userController.logoutUser);
 
-userRouter.delete('/users/:userId', userController.deleteUser);
+//userRouter.put('/users/:userId', userController.updateUser);
+
+//userRouter.delete(/users/:userId, userController.deleteUser);
 
 export default userRouter;

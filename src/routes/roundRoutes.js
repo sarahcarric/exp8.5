@@ -7,8 +7,8 @@ roundRouter.get('/users/:userId/rounds', roundController.getRounds);
 
 roundRouter.post('/users/:userId/rounds', roundController.addRound);
 
-roundRouter.put('/users/:userId/rounds/:roundId', roundController.updateRound);
+//roundRouter.put('/users/:userId/rounds/:roundId', roundController.updateRound);
 
-roundRouter.delete('/users/:userId/rounds/:roundId', roundController.deleteRound);
+//roundRouter.delete('/users/:userId/rounds/:roundId', roundController.deleteRound);
 
 export default roundRouter;
