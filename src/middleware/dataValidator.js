@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import {userJoiSchema, roundJoiSchema} from '../utils/validationSchemas.js';
+import {emailRegex, userJoiSchema, roundJoiSchema} from '../utils/validationSchemas.js';
 
 export const validateUserLogin = (req, res, next) => {
   const loginSchema = Joi.object({

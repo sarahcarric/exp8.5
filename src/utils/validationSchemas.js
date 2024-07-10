@@ -1,5 +1,5 @@
 import Joi from 'joi';
-const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+export const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const roundJoiSchema = Joi.object({
   date: Joi.date().required(),

@@ -6,6 +6,7 @@
  *************************************************************************/
 import User from '../models/User.js';
 import { UserNotFoundError, UserPasswordInvalidError } from '../utils/errors.js';
+import bcrypt from 'bcrypt';  
 
 export default {
    /***********************************************************************
@@ -22,7 +23,8 @@ export default {
     if (!user) {
       throw new UserNotFoundError('User with email ' + email + ' not found');
     } 
-    if (password !== user.accountInfo.password) {
+    const validPassword = await bcrypt.compare(password, user.accountInfo.password);
+    if (!validPassword) {
       throw new UserPasswordInvalidError('Invalid password');
     }
     const userObject = {...user};
@@ -40,6 +42,8 @@ export default {
    * @returns {Promise<Object>} The added user object.
    *************************************************************************/
   addUser: async (newUser) => {
+    const salt = await bcrypt.genSalt(10);
+    newUser.accountInfo.password = await bcrypt.hash(newUser.accountInfo.password, salt);
     const user = new User(newUser);
     await user.save();
     const userObject = user.toObject();
