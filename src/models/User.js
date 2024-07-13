@@ -30,7 +30,15 @@ const userSchema = new mongoose.Schema({
     securityAnswer: {
       type: String,
       required: true
-    }
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false
+    },
+    verificationDueBy: {
+      type: Date,
+      default: () => new Date(Date.now() + 1000*60*60*24) //24 hours from now
+    } 
   },
   identityInfo: {
     displayName: {

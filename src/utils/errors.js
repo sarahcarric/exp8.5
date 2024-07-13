@@ -13,6 +13,13 @@ export class UserPasswordInvalidError extends Error {
   }
 }
 
+export class UserAlreadyVerfiedError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'UserAlreadyVerifiedError';
+  }
+}
+
 //Round object errors
 export class RoundNotFoundError extends Error {
   constructor(message) {

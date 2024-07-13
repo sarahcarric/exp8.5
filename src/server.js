@@ -4,15 +4,18 @@
  * @module: server
  * @requires: express, mongoose, dotenv, userRouter, roundRouter, errorHandler
   *************************************************************************/
+import dotenv from 'dotenv';
+import sgMail from '@sendgrid/mail';
 import express from 'express';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 import userRouter from './routes/userRoutes.js';
 import roundRouter from './routes/roundRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 
-//Load environment variables from .env file
 dotenv.config();
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY); 
+
 const connectStr = process.env.MONGODB_URI;
 
 //Connect to MongoDB database using Mongoose library

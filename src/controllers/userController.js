@@ -10,7 +10,6 @@ import userService from '../services/userService.js';
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
- * @returns {Promise<void>} - A promise that resolves with the users data.
  *************************************************************************/
 export const getUsers = async (req, res, next) => {
   try {
@@ -27,8 +26,6 @@ export const getUsers = async (req, res, next) => {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
- * @returns {Promise<void>} - A promise that resolves with the an object
- * consisting of user and token props.
  *************************************************************************/
 export const loginUser = async (req, res, next) => {
   try {
@@ -40,18 +37,65 @@ export const loginUser = async (req, res, next) => {
 }
 
 /***********************************************************************
- * addUser (POST /users)
- * @desc Add a new user.
+ * registerUser (POST /users)
+ * @desc Add a new user to the database, but mark them as unverified.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
- * @returns {Promise<void>} - A promise that resolves with the added user data.
  *************************************************************************/
-export const addUser = async (req, res, next) => {
+export const registerUser = async (req, res, next) => {
   try {
-    const user = await userService.addUser(req.body);
+    const user = await userService.registerUser(req.body);
     res.status(201).json(user);
   } catch (err) {
     next(err)
   }
+}
+
+/***********************************************************************
+ * verifyUserEmail (GET /users/verify-token/:token)
+ * @desc Verify a user's email address using a token.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ *************************************************************************/
+export const verifyUserEmail = async (req, res, next) => {
+  let redirectUrl = process.env.CLIENT_DEPLOYMENT_URL;
+  try {
+    await userService.verifyUserEmail(req.params.token);
+    redirectUrl += '/emailverified';
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    redirectUrl += '/emailvalidationerror';
+    if (err.name === 'JsonWebTokenError') {
+      redirectUrl += '?reason=invalidtoken';
+    } else {
+      redirectUrl += '?reason=other'; 
+    }
+    if (req.params.token) {
+      const decodedToken = jwt.decode(req.params.token);
+      if (decodedToken && decodedToken.email) {
+        // Append email as an additional parameter
+        redirectUrl += `&email=${encodeURIComponent(decodedToken.email)}`;
+      } 
+    }
+    console.error('Error verifying user email:', err);
+    return res.redirect(redirectUrl);
+  }
+}
+
+/***********************************************************************
+ * resendVerificationEmail (POST /users/resend-verification-email)
+ * @desc Resend a verification email to the user.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ *************************************************************************/
+export const resendVerificationEmail = async (req, res, next) => {
+  try {
+    await userService.resendVerificationEmail(req.body.email);
+    res.status(200).send('Verification email sent to ' + req.body.email);
+  } catch (err) {
+    next(err);
+  } 
 }

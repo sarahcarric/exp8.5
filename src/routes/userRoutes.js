@@ -8,7 +8,11 @@ userRouter.get('/users', userController.getUsers);
 
 userRouter.post('/users/login', validateUserLogin, userController.loginUser);
 
-userRouter.post('/users', validateUser, userController.addUser);
+userRouter.post('/users/register', validateUser, userController.registerUser);
+
+userRouter.get('/users/verify-email/:token', userController.verifyUserEmail);
+
+userRouter.post('/users/resend-verification-email', userController.resendVerificationEmail);
 
 //userRouter.post('/users/logout', userController.logoutUser);
 
