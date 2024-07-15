@@ -23,14 +23,6 @@ const userSchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    securityQuestion: {
-      type: String,
-      required: true
-    },
-    securityAnswer: {
-      type: String,
-      required: true
-    },
     emailVerified: {
       type: Boolean,
       default: false
@@ -38,7 +30,15 @@ const userSchema = new mongoose.Schema({
     verificationDueBy: {
       type: Date,
       default: () => new Date(Date.now() + 1000*60*60*24) //24 hours from now
-    } 
+    },
+    passResetToken: {
+      type: String,
+      default: null
+    },
+    passResetVerfiedToken: {
+      type: String,
+     default: null
+    }
   },
   identityInfo: {
     displayName: {

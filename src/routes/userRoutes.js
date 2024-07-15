@@ -14,6 +14,12 @@ userRouter.get('/users/verify-email/:token', userController.verifyUserEmail);
 
 userRouter.post('/users/resend-verification-email', userController.resendVerificationEmail);
 
+userRouter.post('/users/reset-password/request', userController.requestPasswordReset);
+
+userRouter.post('/users/reset-password/verify', userController.verifyPasswordReset);
+
+userRouter.post('/users/reset-password/complete', userController.completePasswordReset);
+
 //userRouter.post('/users/logout', userController.logoutUser);
 
 //userRouter.put('/users/:userId', userController.updateUser);

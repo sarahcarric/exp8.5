@@ -5,7 +5,7 @@
  * @module userService
  *************************************************************************/
 import User from '../models/User.js';
-import { UserNotFoundError, UserPasswordInvalidError } from '../utils/errors.js';
+import { UserNotFoundError, UserPasswordInvalidError, UserPasswordResetCodeInvalidError} from '../utils/errors.js';
 import bcrypt from 'bcrypt'; 
 import jwt from 'jsonwebtoken';
 import sgMail from '@sendgrid/mail';
@@ -30,6 +30,25 @@ const sendVerificationEmail = async (email, verificationToken) => {
     html: `<p>Please click on the following link to verify ` +
             `your email address:` +
         `<a href="${verificationUrl}">Verify Email</a></p>`
+  };
+  await sgMail.send(message);
+};
+
+/***********************************************************************
+ * sendPasswordResetEmail
+ * @descr Send a password reset email to the user.
+ * @param {string} email - The email address to send the password reset email to.
+ * @param {string} resetCode - The code to reset the user's password.
+ * @returns {Promise<void>}
+ * @throws {Error} If the email fails to send.
+ *************************************************************************/
+const sendPasswordResetEmail = async (email, resetCode) => {
+  const message = {
+    to: email,
+    from: process.env.SENDGRID_FROM_ADDRESS,
+    subject: 'SpeedScore: Password Reset Code',
+    text: `Your password reset code is: ${resetCode}`,
+    html: `<p>Your password reset code is: <strong>${resetCode}</strong></p>`
   };
   await sgMail.send(message);
 };
@@ -119,6 +138,45 @@ export default {
     user.accountInfo.verificationDueBy = new Date(Date.now() + 1000*60*60*24); //24 hours from now
     await user.save();
     sendVerificationEmail(email, verificationToken);
+  },
+
+  initiatePasswordReset: async (email) => {
+    const user = await User.findOne({"accountInfo.email": email });
+    if (!user) {
+      throw new UserNotFoundError('User with email ' + email + ' not found');
+    }
+    const resetCode = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    const resetToken = jwt.sign({resetCode}, process.env.JWT_SECRET, { expiresIn: 15 * 60 });
+    user.accountInfo.passResetToken = resetToken;
+    await user.save();
+    sendPasswordResetEmail(email, resetCode);
+  },
+
+  verifyPasswordReset: async (email, resetCode) => {
+    const user = await User.findOne({"accountInfo.email": email });
+    if (!user) {
+      throw new UserNotFoundError('User with email ' + email + ' not found');
+    }
+    const decoded = jwt.verify(user.accountInfo.passResetToken, process.env.JWT_SECRET);
+    if (decoded.resetCode !== resetCode) {
+      throw new UserPasswordResetCodeInvalidError('Invalid reset code');
+    }
+    const verifyToken = jwt.sign({email, resetCode}, process.env.JWT_SECRET, { expiresIn: 15 * 60 });
+    user.accountInfo.passResetVerfiedToken = verifyToken;
+    await user.save();
+  },
+
+  completePasswordReset: async (email, password) => {
+    const user = await User.findOne({"accountInfo.email": email });
+    if (!user) {
+      throw new UserNotFoundError('User with email ' + email + ' not found');
+    }
+    jwt.verify(user.accountInfo.passResetVerfiedToken, process.env.JWT_SECRET); 
+    const salt = await bcrypt.genSalt(10);
+    user.accountInfo.password = await bcrypt.hash(password, salt);
+    user.accountInfo.passResetToken = null;
+    user.accountInfo.passResetToken = null;
+    await user.save();
   },
 
   /***********************************************************************

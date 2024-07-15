@@ -99,3 +99,51 @@ export const resendVerificationEmail = async (req, res, next) => {
     next(err);
   } 
 }
+
+/***********************************************************************
+ * requestPasswordReset (POST /users/reset-password/request)
+ * @desc Request a password reset email.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ *************************************************************************/
+export const requestPasswordReset = async (req, res, next) => {
+  try {
+    await userService.requestPasswordReset(req.body.email);
+    res.status(200).send('Password reset email sent to ' + req.body.email);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/***********************************************************************
+ * verifyPasswordReset (POST /users/reset-password/verify)
+ * @desc Verify a password reset code.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ *************************************************************************/ 
+export const verifyPasswordReset = async (req, res, next) => {
+  try {
+    await userService.verifyPasswordReset(req.body.email, req.body.resetCode);
+    res.status(200).send('Password reset code verified');
+  } catch (err) {
+    next(err);
+  } 
+}
+
+/***********************************************************************
+ * completePasswordReset (POST /users/reset-password/complete)
+ * @desc Complete a password reset by setting a new password.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ *************************************************************************/
+export const completePasswordReset = async (req, res, next) => {
+  try {
+    await userService.completePasswordReset(req.body.email, req.body.resetCode, req.body.newPassword);
+    res.status(200).send('Password reset complete');
+  } catch (err) {
+    next(err);
+  } 
+}

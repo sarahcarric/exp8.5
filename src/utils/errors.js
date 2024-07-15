@@ -20,6 +20,13 @@ export class UserAlreadyVerfiedError extends Error {
   }
 }
 
+export class UserPasswordResetCodeInvalidError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'UserPasswordResetCodeInvalidError';
+  }
+}
+
 //Round object errors
 export class RoundNotFoundError extends Error {
   constructor(message) {
