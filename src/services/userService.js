@@ -140,6 +140,12 @@ export default {
     sendVerificationEmail(email, verificationToken);
   },
 
+  /***********************************************************************
+   * initiatePasswordReset
+   * @descr Initiate a password reset for the user.
+   * @param {string} email - The email address to send the password reset email to.
+   * @returns {Promise<void>}
+   *************************************************************************/
   initiatePasswordReset: async (email) => {
     const user = await User.findOne({"accountInfo.email": email });
     if (!user) {
@@ -152,6 +158,13 @@ export default {
     sendPasswordResetEmail(email, resetCode);
   },
 
+  /***********************************************************************
+   * verifyPasswordReset
+   * @descr Verify a password reset for the user.
+   * @param {string} email - The email address to verify the password reset for.
+   * @param {string} resetCode - The code to verify the password reset.
+   * @returns {Promise<void>}
+   *************************************************************************/
   verifyPasswordReset: async (email, resetCode) => {
     const user = await User.findOne({"accountInfo.email": email });
     if (!user) {
@@ -166,6 +179,13 @@ export default {
     await user.save();
   },
 
+  /***********************************************************************
+   * completePasswordReset
+   * @descr Complete a password reset for the user.
+   * @param {string} email - The email address to complete the password reset for.
+   * @param {string} password - The new password to set for the user.
+   * @returns {Promise<void>}
+   *************************************************************************/
   completePasswordReset: async (email, password) => {
     const user = await User.findOne({"accountInfo.email": email });
     if (!user) {
