@@ -141,7 +141,7 @@ export const verifyPasswordReset = async (req, res, next) => {
  *************************************************************************/
 export const completePasswordReset = async (req, res, next) => {
   try {
-    await userService.completePasswordReset(req.body.email, req.body.resetCode, req.body.newPassword);
+    await userService.completePasswordReset(req.body.email, req.body.newPassword);
     res.status(200).send('Password reset complete');
   } catch (err) {
     next(err);

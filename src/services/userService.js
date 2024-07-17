@@ -115,6 +115,7 @@ export default {
       throw new UserNotFoundError('User with email ' + decoded.email + ' not found');
     }
     user.accountInfo.emailVerified = true;
+    user.accountInfo.verificationDueBy = null;
     await user.save();
     console.log('User email verified:', user.accountInfo.email);
     return true;
@@ -141,12 +142,12 @@ export default {
   },
 
   /***********************************************************************
-   * initiatePasswordReset
+   * requestPasswordReset
    * @descr Initiate a password reset for the user.
    * @param {string} email - The email address to send the password reset email to.
    * @returns {Promise<void>}
    *************************************************************************/
-  initiatePasswordReset: async (email) => {
+  requestPasswordReset: async (email) => {
     const user = await User.findOne({"accountInfo.email": email });
     if (!user) {
       throw new UserNotFoundError('User with email ' + email + ' not found');
@@ -191,11 +192,13 @@ export default {
     if (!user) {
       throw new UserNotFoundError('User with email ' + email + ' not found');
     }
+    console.log("in completePasswordReset with email " + email + " and password " + password)
     jwt.verify(user.accountInfo.passResetVerfiedToken, process.env.JWT_SECRET); 
+    console.log("verified token");
     const salt = await bcrypt.genSalt(10);
     user.accountInfo.password = await bcrypt.hash(password, salt);
     user.accountInfo.passResetToken = null;
-    user.accountInfo.passResetToken = null;
+    user.accountInfo.passResetVerifiedToken = null;
     await user.save();
   },
 
