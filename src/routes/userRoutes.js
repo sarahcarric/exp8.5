@@ -20,6 +20,12 @@ userRouter.post('/users/reset-password/verify', userController.verifyPasswordRes
 
 userRouter.post('/users/reset-password/complete', userController.completePasswordReset);
 
+userRouter.post('/users/:userId/mfa/enable', userController.enableMfa);
+
+userRouter.post('/users/:userId/mfa/start-verify', userController.startVerifyMfa);
+
+userRouter.post('/users/:userId/mfa/verify', userController.verifyMfa);
+
 //userRouter.post('/users/logout', userController.logoutUser);
 
 //userRouter.put('/users/:userId', userController.updateUser);

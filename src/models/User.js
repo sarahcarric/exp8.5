@@ -38,6 +38,22 @@ const userSchema = new mongoose.Schema({
     passResetVerfiedToken: {
       type: String,
      default: null
+    },
+    mfaSecret: {
+        type: String,
+        default: null
+    },
+    mfaVerified: {
+        type: Boolean,
+        default: false
+    },
+    mfaAttempts: {
+        type: Number,
+        default: 0
+    },
+    mfaStartTime: {
+      type: Date,
+      default: Date.now
     }
   },
   identityInfo: {

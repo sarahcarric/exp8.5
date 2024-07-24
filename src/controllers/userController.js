@@ -147,3 +147,52 @@ export const completePasswordReset = async (req, res, next) => {
     next(err);
   } 
 }
+
+/***********************************************************************
+ * enableMfa (POST /users/:userId/mfa/enable)
+ * @desc Enable multi-factor authentication for a user account.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ *************************************************************************/
+export const enableMfa = async (req, res, next) => {
+  try {
+    const result = await userService.enableMfa(req.params.userId);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/***********************************************************************
+ * startVerifyMfa (POST /users/:userId/mfa/start-verify)
+ * @desc Initiate an MFA verification session .
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ *************************************************************************/
+export const startVerifyMfa = async (req, res, next) => {
+  try {
+    await userService.startVerifyMfa(req.params.userId);
+    res.status(200).send('MFA verification started');
+  } catch (err) {
+    next(err);
+  }
+}
+
+/***********************************************************************
+ * verifyMfa (POST /users/:userId/mfa/verify)
+ * @desc Verify a multi-factor authentication code for a user account.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ *************************************************************************/
+export const verifyMfa = async (req, res, next) => {
+  try {
+    const result = await userService.verifyMfa(req.params.userId, req.body.code);
+    res.status(200).send(result);
+  } catch (err) {
+    next(err);
+  }
+}
+

@@ -48,3 +48,10 @@ export class ObjectIdInvalidError extends Error {
     this.name = 'ObjectIdInvalidError';
   }
 }
+
+export class MfaSessionError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'MfaSessionError';
+  }
+}

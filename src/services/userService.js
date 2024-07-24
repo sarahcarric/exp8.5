@@ -5,10 +5,17 @@
  * @module userService
  *************************************************************************/
 import User from '../models/User.js';
-import { UserNotFoundError, UserPasswordInvalidError, UserPasswordResetCodeInvalidError} from '../utils/errors.js';
+import { UserAlreadyVerfiedError, UserNotFoundError, 
+         UserPasswordInvalidError, UserPasswordResetCodeInvalidError, MfaSessionError} from '../utils/errors.js';
 import bcrypt from 'bcrypt'; 
 import jwt from 'jsonwebtoken';
 import sgMail from '@sendgrid/mail';
+import { authenticator } from 'otplib';
+import QRCode from 'qrcode';
+import crypto from 'crypto';
+
+const MAX_MFA_TIME = 60 * 1000 * 10 //10 minutes
+const MAX_MFA_ATTEMPTS = 5;
 
 /***********************************************************************
  * sendVerificationEmail
@@ -52,6 +59,53 @@ const sendPasswordResetEmail = async (email, resetCode) => {
   };
   await sgMail.send(message);
 };
+
+/***********************************************************************
+ * encryptMfaSecret
+ * @descr Encrypt the MFA secret.
+ * @param {string} mfaSecret - The MFA secret to encrypt.
+ * @returns {string} The encrypted MFA secret.
+ *************************************************************************/
+const encryptMfaSecret = (mfaSecret) => {
+  const iv = crypto.randomBytes(16); // Generate a random initialization vector
+  console.log(`Generated IV: ${iv.toString('hex')}`)
+  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(process.env.MFA_ENCRYPTION_KEY, 'hex'), iv);
+  let encrypted = cipher.update(mfaSecret, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const encryptedWithIv = iv.toString('hex') + ':' + encrypted;
+  return encryptedWithIv;
+}
+
+/***********************************************************************
+ * decryptMfaSecret
+ * @descr Decrypt the MFA secret.
+ * @param {string} encryptedMfaSecret - The encrypted MFA secret to decrypt.
+ * @returns {string} The decrypted MFA secret.
+ *************************************************************************/
+const decryptMfaSecret = (encryptedWithIv) => {
+  const [ivHex, encryptedData] = encryptedWithIv.split(':');
+  const iv = Buffer.from(ivHex, 'hex');
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(process.env.MFA_ENCRYPTION_KEY, 'hex'), iv);
+  let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
+
+/***********************************************************************
+ * generateQrCodeDataUrl
+ * @descr Generate a data URL for the QR code.
+ * @param {imageUrl} secret - The image Url to generate the QR code for.
+ * @returns <string> The data URL for the QR code.
+ *************************************************************************/
+const generateQrCodeDataUrl = async (imageUrl) => {
+    try {
+      const url = await QRCode.toDataURL(imageUrl);
+      return url;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }
 
 export default {
    /***********************************************************************
@@ -200,6 +254,70 @@ export default {
     user.accountInfo.passResetToken = null;
     user.accountInfo.passResetVerifiedToken = null;
     await user.save();
+  },
+
+  enableMfa: async (userId) => {
+    const user  = await User.findById(userId);
+    if (!user) {
+      throw new UserNotFoundError('User with id ' + userId + ' not found');
+    }
+    if (user.accountInfo.mfaVerified) {
+      throw new UserAlreadyVerfiedError('MFA already enabled');
+    }
+    const secret = authenticator.generateSecret();
+    const qrCodeImageUrl = authenticator.keyuri(user.accountInfo.email, 'SpeedScore',secret);
+    const qrCodeDataUrl = await generateQrCodeDataUrl(qrCodeImageUrl);
+    user.accountInfo.mfaSecret = encryptMfaSecret(secret);
+    user.accountInfo.mfaVerified = false;
+    await user.save();
+    return {secret, qrCodeDataUrl};
+  },
+
+  startVerifyMfa: async (userId) => {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new UserNotFoundError('User with id ' + userId + ' not found');
+    }
+    if (!user.accountInfo.mfaSecret) {
+      throw new Error('MFA not enabled for this user');
+    }
+    // Initialize MFA verification process
+    user.accountInfo.mfaAttempts = 0;
+    user.accountInfo.mfaStartTime = new Date();
+    await user.save();
+    return 'MFA verification started';
+  },
+
+  verifyMfa: async (userId, token) => {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new UserNotFoundError('User with id ' + userId + ' not found');
+    }
+    if (!user.accountInfo.mfaSecret) {
+      throw new Error('MFA not enabled for this user');
+    }
+    const currentTime = new Date();
+    const timeElapsed = (currentTime - user.accountInfo.mfaStartTime); // Time elapsed in milliseconds
+    if (timeElapsed > MAX_MFA_TIME) {
+      throw new MfaSessionError('MFA session has expired or you have not started an MFA session');
+    }
+    if (user.accountInfo.mfaAttempts >= MAX_MFA_ATTEMPTS) {
+      throw new MfaSessionError('Maximum number of MFA attempts exceeded');
+    }
+    const secret = decryptMfaSecret(user.accountInfo.mfaSecret);
+    const isValid = authenticator.verify({ token, secret });
+    if (!isValid) {
+      user.accountInfo.mfaAttempts++; // Increment mfaAttempts on failure
+      await user.save();
+      return false;
+  }
+
+  // On successful verification, reset the counter and start time
+  user.accountInfo.mfaVerified = true;
+  user.accountInfo.mfaAttempts = 0;
+  user.accountInfo.mfaStartTime = null;
+  await user.save();
+  return true;
   },
 
   /***********************************************************************
