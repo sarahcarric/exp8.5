@@ -21,7 +21,13 @@ const userSchema = new mongoose.Schema({
     },
     password: {
       type: String,
-      required: true
+      validate: {
+        validator: function(value) {
+          // `this` refers to the current document being validated
+          return this.oauthProvider !== 'none' || (value && value.length > 0);
+        },
+        message: 'Password is required if not using OAuth'
+      }
     },
     emailVerified: {
       type: Boolean,
@@ -54,6 +60,11 @@ const userSchema = new mongoose.Schema({
     mfaStartTime: {
       type: Date,
       default: Date.now
+    },
+    oauthProvider: {
+      type: String,
+      enum: ['none', 'github'],
+      default: 'none'
     }
   },
   identityInfo: {
