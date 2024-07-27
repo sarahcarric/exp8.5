@@ -14,8 +14,16 @@ passport.use(new GithubStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     // Find or create user in your database
-    let user = await User.findOne({ email: profile.emails[0].value });
-    if (!user) {
+    let user = await User.findOne({'accountInfo.email': profile.emails[0].value });
+    if (user) {
+      // Check if the oauthProvider is not 'github'
+      if (user.accountInfo.oauthProvider !== 'github') {
+        // Update oauthProvider to 'github' and delete password
+        user.accountInfo.oauthProvider = 'github';
+        user.accountInfo.password = null; // Delete password
+        await user.save();
+      }
+    } else {
       user = new User({
         accountInfo: {
           email: profile.emails[0].value,

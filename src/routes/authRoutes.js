@@ -1,14 +1,10 @@
 import express from 'express';
-import { githubAuth, githubCallback, handleAuthFailure, handleAuthSuccess } from '../controllers/authController.js';
+import { githubAuth, githubCallback } from '../controllers/authController.js';
 
 const authRouter = express.Router();
 
 authRouter.get('/auth/github', githubAuth);
 
-authRouter.get('/auth/github/callback', 
-  githubCallback,
-  handleAuthFailure,
-  handleAuthSuccess
-);
+authRouter.get('/auth/github/callback', githubCallback);
 
 export default authRouter;
