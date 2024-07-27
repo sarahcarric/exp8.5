@@ -1,4 +1,8 @@
-//User object errors
+/***********************************************************************
+ * @file errors.js
+ * @desc Defines custom error classes for the application.
+ *************************************************************************/
+
 export class UserNotFoundError extends Error {
   constructor(message) {
     super(message);

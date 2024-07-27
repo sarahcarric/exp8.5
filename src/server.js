@@ -1,8 +1,6 @@
 /*************************************************************************
  * @file: server.js
- * @descr: This file contains the main server code for SpeedScore's API.
- * @module: server
- * @requires: express, mongoose, dotenv, userRouter, roundRouter, errorHandler
+ * @desc: Defines the main server code for SpeedScore's API.
   *************************************************************************/
 import dotenv from 'dotenv';
 import sgMail from '@sendgrid/mail';

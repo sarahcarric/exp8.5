@@ -1,4 +1,8 @@
-// middleware/passport.js
+/*************************************************************************
+ * @File: src/middleware/passport.js
+ * @Desc: Contains the configuration for the Github OAuth strategy.
+ * @Module: Passport
+ ************************************************************************/
 import passport from 'passport';
 import { Strategy as GithubStrategy } from 'passport-github2';
 import User from '../models/User.js'; // Adjust the path to your User model
@@ -6,7 +10,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Configure Google OAuth Strategy
+/*************************************************************************
+ * @desc Configure the Github OAuth strategy.
+ * @param {Object} accessToken - The access token returned by Github.
+ * @param {Object} refreshToken - The refresh token returned by Github.
+ * @param {Object} profile - The user's Github profile.
+ * @param {Function} done - The callback function.
+ * @returns {Function} - Calls the done function.
+ * **********************************************************************/
 passport.use(new GithubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,

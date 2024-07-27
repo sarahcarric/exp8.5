@@ -1,3 +1,8 @@
+/***********************************************************************
+ * @file validationSchemas.js
+ * @desc Defines the Joi validation schemas for user and round data.
+ *************************************************************************/
+
 import Joi from 'joi';
 export const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
