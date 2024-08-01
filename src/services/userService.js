@@ -131,7 +131,9 @@ export default {
     delete userObject.accountInfo.securityQuestion;
     delete userObject.accountInfo.securityAnswer;
     delete userObject.__v;
-    return userObject;
+    const accessToken = jwt.sign({userId: user._id}, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const refreshToken = jwt.sign({userId: user._id}, process.env.JWT_SECRET, { expiresIn: '7d' });
+    return {user: userObject, accessToken, refreshToken};
   },
 
   /***********************************************************************
