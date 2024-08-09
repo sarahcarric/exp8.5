@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import { UserNotFoundError, UserPasswordInvalidError, ObjectIdInvalidError} from '../utils/errors.js';
 
 /*************************************************************************
@@ -32,6 +33,12 @@ export default function errorHandler(err, req, res, next) {
              err instanceof mongoose.Error.ValidationError) {
     return res.status(400).send({ error: err.message });
   } 
+  if (err instanceof jwt.TokenExpiredError) {
+    return res.status(401).send({ error: 'Token expired' });
+  }
+  if (err instanceof jwt.JsonWebTokenError) {
+    return res.status(401).send({ error: 'Invalid token' });
+  }
   if (err.code === 11000 || err.code === 11001) { //MongoDB duplicate key error
     return res.status(400).send({ error: 'A user with that email already exists' });
   } 

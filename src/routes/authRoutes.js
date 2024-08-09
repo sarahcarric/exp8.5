@@ -18,6 +18,15 @@ const authRouter = express.Router();
 authRouter.post('/auth/login', validateUserLogin, authController.loginUser);
 
 /***********************************************************************
+ * @route POST /auth/refresh-token
+ * @desc Refresh the user's JWT.
+ * @access Public
+ * @returns {Object} - An object containing the users's new access
+ *                    token and its expiration date.
+ * *********************************************************************/
+authRouter.post('/auth/refresh-token', authController.refreshToken);
+
+/***********************************************************************
  * @route POST /auth/register
  * @desc Create a new, unverified user account and email the user a 
  *       verification link they must click to activate their account.  
@@ -82,6 +91,13 @@ authRouter.post('/auth/:userId/mfa/start-verify', authController.startVerifyMfa)
  * @access Private
  * *********************************************************************/
 authRouter.post('/auth/:userId/mfa/verify', authController.verifyMfa);
+
+/***********************************************************************
+ * @route GET /auth/anti-csrf-token
+ * @desc Get the anti-CSRF token associated with the user's session.
+ * @access Public
+ * *********************************************************************/
+authRouter.get('/auth/anti-csrf-token', authController.getAntiCsrfToken);
 
 /***********************************************************************
  * @route GET /auth/github

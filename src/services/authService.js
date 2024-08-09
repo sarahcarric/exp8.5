@@ -7,7 +7,9 @@
  *************************************************************************/
 import User from '../models/User.js';
 import { UserAlreadyVerfiedError, UserNotFoundError, 
-         UserPasswordInvalidError, UserPasswordResetCodeInvalidError, MfaSessionError} from '../utils/errors.js';
+         InvalidRefreshTokenError, UserPasswordInvalidError, 
+         UserPasswordResetCodeInvalidError, MfaSessionError} 
+         from '../utils/errors.js';
 import bcrypt from 'bcrypt'; 
 import jwt from 'jsonwebtoken';
 import sgMail from '@sendgrid/mail';
@@ -158,6 +160,25 @@ export default {
     delete userObject.accountInfo.securityAnswer;
     delete userObject.__v;
     return userObject;
+  },
+
+  /***********************************************************************
+   * refreshAccessToken 
+   * @descr Refresh the access token using the refresh token.
+   * @param {string} userId - The id of the user to refresh the token for.
+   * @param {string} refreshToken - The refresh token to use to refresh the
+   *       access token.
+   * @returns {Promise<Object>} An object containing the new access token
+   *         and its expiry date.
+   *************************************************************************/
+  refreshToken: async (userId, refreshToken ) => {
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    if (decoded.userId !== userId) {
+      throw new InvalidRefreshTokenError('Invalid refresh token');
+    }
+    const accessToken = jwt.sign({userId}, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const accessTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+    return {accessToken, accessTokenExpiry};
   },
 
   /***********************************************************************

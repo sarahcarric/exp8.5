@@ -24,11 +24,38 @@ export const loginUser = async (req, res, next) => {
     };
     res.cookie('accessToken', result.accessToken, cookieOptions);
     res.cookie('refreshToken', result.refreshToken, {...cookieOptions, maxAge: 604800000 });
-    res.status(200).json({accessTokenExpiry: result.accessTokenExpiry, refreshTokenExpiry: result.refreshTokenExpiry});
+    const antiCsrfToken = req.csrfToken();
+    req.session.antiCsrfToken = antiCsrfToken;
+    res.status(200).json({
+      accessTokenExpiry: result.accessTokenExpiry,
+      refreshTokenExpiry: result.refreshTokenExpiry,
+      antiCsrfToken: antiCsrfToken
+    });
   } catch (err) {
     next(err);
   } 
 }
+
+/***********************************************************************
+ * refreshToken (POST /auth/refresh-token)
+ * @desc If the user's refresh token is valid and unexpired, refresh
+ *       the token.
+ * @param {Object} req - The request object containing the userId and
+ *        the user's refresh token.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ * @returns An object containing the user's new access token and its
+ *         expiration date.
+ *************************************************************************/
+export const refreshToken = async (req, res) => {
+  try {
+    const { userId, refreshToken } = req.body;
+    const result = await authService.refreshToken(userId, refreshToken)
+    res.status(200).json({result });
+  } catch (err) {
+    next(err)
+  }
+};
 
 /***********************************************************************
  * registerUser (POST /auth)
@@ -36,6 +63,7 @@ export const loginUser = async (req, res, next) => {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
+ * @returns The user object of the user that has registered.
  *************************************************************************/
 export const registerUser = async (req, res, next) => {
   try {
@@ -190,6 +218,17 @@ export const verifyMfa = async (req, res, next) => {
   }
 }
 
+/***********************************************************************
+ * getAntiCsrfToken (GET /auth/anti-csrf-token)
+ * @desc Get the user's current anti-CSRF token, which must be included
+ * in the header of state-changing API requests to prevent CSRF attacks.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ *************************************************************************/
+export const getAntiCsrfToken = (req, res) => {
+  const antiCsrfToken = req.csrfToken();
+  res.status(200).json({ antiCsrfToken });
+};
 
 /***********************************************************************
  * githubAuth (GET /auth/github)

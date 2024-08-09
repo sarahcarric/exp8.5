@@ -31,6 +31,12 @@ export class UserPasswordResetCodeInvalidError extends Error {
   }
 }
 
+export class InvalidRefreshTokenError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'InvalidRefreshTokenError';
+  }
+}
 //Round object errors
 export class RoundNotFoundError extends Error {
   constructor(message) {

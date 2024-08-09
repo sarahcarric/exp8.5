@@ -5,6 +5,10 @@
 import dotenv from 'dotenv';
 import sgMail from '@sendgrid/mail';
 import express from 'express';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import csrf from '@fastify/csrf';
+import cors from 'cors';
 import mongoose from 'mongoose';
 import passport from 'passport';
 import './middleware/passport.js';
@@ -29,9 +33,27 @@ mongoose.connect(connectStr)
 //Initialize Express app
 const app = express();
 
+app.use(cookieParser());
 //Install built-in Express body-parser middleware
 app.use(express.json());
 
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'None',
+             httpOnly: true,}
+}));
+
+app.use(csrf({ cookie: false }));
+
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' ? 'https://speedscore.org' : 'http://localhost:3000',
+  credentials: true // Allow cookies to be sent with requests
+};
+
+app.use(cors(corsOptions));
 app.use(passport.initialize());
 
 //Install app routes
