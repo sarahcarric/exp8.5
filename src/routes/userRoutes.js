@@ -15,8 +15,6 @@ const userRouter = express.Router();
  * *********************************************************************/
 userRouter.get('/users', userController.getUsers);
 
-//userRouter.post('/users/logout', userController.logoutUser);
-
 //userRouter.put('/users/:userId', userController.updateUser);
 
 //userRouter.delete(/users/:userId, userController.deleteUser);

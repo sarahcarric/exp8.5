@@ -76,28 +76,28 @@ authRouter.post('/auth/reset-password/complete', authController.completePassword
  * @desc Log out the user.
  * @access Private
  * *********************************************************************/
-authRouter.post('/auth/:userId/mfa/enable', authController.enableMfa);
+authRouter.post('/auth/:userId/mfa/enable', authenticate, csrfProtection, authController.enableMfa);
 
 /***********************************************************************
  * @route POST /auth/:userId/mfa/disable
  * @desc Disable multi-factor authentication for a user account.
  * @access Private
  * *********************************************************************/
-authRouter.post('/auth/:userId/mfa/start-verify', authController.startVerifyMfa);
+authRouter.post('/auth/:userId/mfa/start-verify', authenticate, csrfProtection, authController.disableMfa);
 
 /***********************************************************************
  * @route POST /auth/:userId/mfa/verify
  * @desc Verify a multi-factor authentication code.
  * @access Private
  * *********************************************************************/
-authRouter.post('/auth/:userId/mfa/verify', authController.verifyMfa);
+authRouter.post('/auth/:userId/mfa/verify', authenticate, csrfProtection, authController.verifyMfa);
 
 /***********************************************************************
  * @route GET /auth/anti-csrf-token
  * @desc Get the anti-CSRF token associated with the user's session.
  * @access Public
  * *********************************************************************/
-authRouter.get('/auth/anti-csrf-token', authController.getAntiCsrfToken);
+authRouter.get('/auth/anti-csrf-token', authenticate, authController.getAntiCsrfToken);
 
 /***********************************************************************
  * @route GET /auth/github

@@ -3,6 +3,7 @@
  * @desc Contains the controller functions for handling Oauth requests.
  *************************************************************************/
 import authService from '../services/authService.js';
+import cookieParser from 'cookie-parser';
 import passport from 'passport';
 
 /***********************************************************************
@@ -49,8 +50,8 @@ export const loginUser = async (req, res, next) => {
  *************************************************************************/
 export const refreshToken = async (req, res) => {
   try {
-    const { userId, refreshToken } = req.body;
-    const result = await authService.refreshToken(userId, refreshToken)
+    const refreshToken = req.cookies.refreshToken;
+    const result = await authService.refreshToken(refreshToken)
     res.status(200).json({result });
   } catch (err) {
     next(err)
@@ -188,7 +189,7 @@ export const enableMfa = async (req, res, next) => {
 
 /***********************************************************************
  * startVerifyMfa (POST /auth/:userId/mfa/start-verify)
- * @desc Initiate an MFA verification session .
+ * @desc Initiate an MFA verification session.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.

@@ -22,7 +22,7 @@ roundRouter.get('/users/:userId/rounds', roundController.getRounds);
  * @access Public
  * @returns {Object} - The updated user object.
  * *********************************************************************/
-roundRouter.post('/users/:userId/rounds', validateRound, roundController.addRound);
+roundRouter.post('/users/:userId/rounds', authenticate, csrfProtection, validateRound, roundController.addRound);
 
 //roundRouter.put('/users/:userId/rounds/:roundId', roundController.updateRound);
 

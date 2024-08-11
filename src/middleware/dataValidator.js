@@ -1,8 +1,7 @@
-/***********************************************************
- * @file: dataValidator.js
- * @desc: Validates incoming data using Joi.
- * @see: {@link https://joi.dev/api/?v=17.4.2}
- **********************************************************/
+/***********************************************************************
+ * @file userController.js
+ * @desc Validates incoming data for the user and round routes using Joi
+ *************************************************************************/
 import Joi from 'joi';
 import {emailRegex, userJoiSchema, roundJoiSchema} from '../utils/validationSchemas.js';
 
