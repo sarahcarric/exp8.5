@@ -6,7 +6,7 @@
  * @module authService
  *************************************************************************/
 import User from '../models/User.js';
-import { UserAlreadyVerfiedError, UserNotFoundError, 
+import { UserAlreadyVerifiedError, UserNotFoundError, 
          InvalidRefreshTokenError, UserPasswordInvalidError, 
          UserPasswordResetCodeInvalidError, MfaSessionError} 
          from '../utils/errors.js';
@@ -137,7 +137,9 @@ export default {
     const refreshToken = jwt.sign({userId: user._id}, process.env.JWT_SECRET, { expiresIn: '7d' });
     const accessTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
     const refreshTokenExpiry = new Date(Date.now() + 604800000); // 7 days
-    return {user: userObject, accessToken, refreshToken, accessTokenExpiry, refreshTokenExpiry};
+    const antiCsrfToken = crypto.randomBytes(32).toString('hex');
+    return {user: userObject, accessToken, refreshToken, 
+            accessTokenExpiry, refreshTokenExpiry, antiCsrfToken};
   },
 
   /***********************************************************************
@@ -171,14 +173,15 @@ export default {
    * @returns {Promise<Object>} An object containing the new access token
    *         and its expiry date.
    *************************************************************************/
-  refreshToken: async (userId, refreshToken ) => {
+  refreshToken: async (refreshToken ) => {
     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
     if (decoded.userId !== userId) {
       throw new InvalidRefreshTokenError('Invalid refresh token');
     }
+    const antiCsrfToken = crypto.randomBytes(32).toString('hex');
     const accessToken = jwt.sign({userId}, process.env.JWT_SECRET, { expiresIn: '1h' });
     const accessTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-    return {accessToken, accessTokenExpiry};
+    return {accessToken, accessTokenExpiry, antiCsrfToken};
   },
 
   /***********************************************************************
@@ -292,7 +295,7 @@ export default {
       throw new UserNotFoundError('User with id ' + userId + ' not found');
     }
     if (user.accountInfo.mfaVerified) {
-      throw new UserAlreadyVerfiedError('MFA already enabled');
+      throw new UserAlreadyVerifiedError('MFA already enabled');
     }
     const secret = authenticator.generateSecret();
     const qrCodeImageUrl = authenticator.keyuri(user.accountInfo.email, 'SpeedScore',secret);

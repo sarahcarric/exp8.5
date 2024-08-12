@@ -3,7 +3,6 @@
  * @desc Contains the controller functions for handling Oauth requests.
  *************************************************************************/
 import authService from '../services/authService.js';
-import cookieParser from 'cookie-parser';
 import passport from 'passport';
 
 /***********************************************************************
@@ -25,12 +24,11 @@ export const loginUser = async (req, res, next) => {
     };
     res.cookie('accessToken', result.accessToken, cookieOptions);
     res.cookie('refreshToken', result.refreshToken, {...cookieOptions, maxAge: 604800000 });
-    const antiCsrfToken = req.csrfToken();
-    req.session.antiCsrfToken = antiCsrfToken;
+    req.session.antiCsrfToken = result.antiCsrfToken;
     res.status(200).json({
       accessTokenExpiry: result.accessTokenExpiry,
       refreshTokenExpiry: result.refreshTokenExpiry,
-      antiCsrfToken: antiCsrfToken
+      antiCsrfToken: result.antiCsrfToken
     });
   } catch (err) {
     next(err);
@@ -40,19 +38,28 @@ export const loginUser = async (req, res, next) => {
 /***********************************************************************
  * refreshToken (POST /auth/refresh-token)
  * @desc If the user's refresh token is valid and unexpired, refresh
- *       the token.
+ *       the token and the anti-CSRF token.
  * @param {Object} req - The request object containing the userId and
  *        the user's refresh token.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
- * @returns An object containing the user's new access token and its
- *         expiration date.
+ * @returns An object containing the user's new access token's 
+ *          epiration date and new anti-CSRF token.
  *************************************************************************/
 export const refreshToken = async (req, res) => {
   try {
-    const refreshToken = req.cookies.refreshToken;
-    const result = await authService.refreshToken(refreshToken)
-    res.status(200).json({result });
+    const result = await authService.refreshToken(refreshToken);
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'None',
+      domain: process.env.COOKIE_DOMAIN,
+      maxAge: 3600000
+    };
+    res.cookie('accessToken', result.accessToken, cookieOptions);
+    req.session.antiCsrfToken = result.antiCsrfToken;
+    res.status(200).json({accessTokenExpiry: result.accessTokenExpiry, 
+                          antiCsrfToken: result.antiCsrfToken});
   } catch (err) {
     next(err)
   }

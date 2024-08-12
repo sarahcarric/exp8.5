@@ -3,6 +3,7 @@
  * @desc Middleware function that handles errors and sends appropriate
  * error response to client.
  *************************************************************************/
+import mongoose from "mongoose";
 
 export default function errorHandler(err, req, res, next) {
   // Handle SyntaxError for invalid JSON

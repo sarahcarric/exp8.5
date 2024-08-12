@@ -48,6 +48,30 @@ export class InvalidRefreshTokenError extends Error {
   }
 }
 
+export class MfaSessionError extends Error {
+  constructor(message = 'MFA session error') {
+    super(message);
+    this.name = 'MfaSessionError';
+    this.statusCode = 401; // Unauthorized
+  }
+}
+
+export class InvalidAccessTokenError extends Error {
+  constructor(message = 'Invalid access token') {
+    super(message);
+    this.name = 'InvalidAccessTokenError';
+    this.statusCode = 401; // Unauthorized
+  }
+}
+
+export class InvalidAntiCsrfTokenError extends Error {
+  constructor(message = 'Invalid anti-CSRF token') {
+    super(message);
+    this.name = 'InvalidAntiCsrfTokenError';
+    this.statusCode = 403; // Forbidden
+  }
+}
+
 // Round object errors
 export class RoundNotFoundError extends Error {
   constructor(message = 'Round not found') {
@@ -70,29 +94,5 @@ export class ObjectIdInvalidError extends Error {
     super(message);
     this.name = 'ObjectIdInvalidError';
     this.statusCode = 400; // Bad Request
-  }
-}
-
-export class MfaSessionError extends Error {
-  constructor(message = 'MFA session error') {
-    super(message);
-    this.name = 'MfaSessionError';
-    this.statusCode = 401; // Unauthorized
-  }
-}
-
-export class InvalidAccessTokenError extends Error {
-  constructor(message = 'Invalid access token') {
-    super(message);
-    this.name = 'InvalidAccessTokenError';
-    this.statusCode = 401; // Unauthorized
-  }
-}
-
-export class InvalidCsrfTokenError extends Error {
-  constructor(message = 'Invalid anti-CSRF token') {
-    super(message);
-    this.name = 'InvalidAntiCsrfTokenError';
-    this.statusCode = 403; // Forbidden
   }
 }

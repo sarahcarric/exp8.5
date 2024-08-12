@@ -6,6 +6,8 @@ import express from 'express';
 import { githubAuth, githubCallback } from '../controllers/authController.js';
 import * as authController from '../controllers/authController.js';
 import { validateUserLogin, validateUser } from '../middleware/dataValidator.js';
+import { authenticate } from '../middleware/authenticate.js';
+import {csrfProtection } from '../middleware/csrfProtection.js';
 
 const authRouter = express.Router();
 
@@ -42,7 +44,6 @@ authRouter.post('/auth/register', validateUser, authController.registerUser);
  * *********************************************************************/
 authRouter.get('/auth/verify-email/:token', authController.verifyUserEmail);
 
-
 /***********************************************************************
  * @route POST /auth/resend-verification-email
  * @desc Resend a verification email to the user.
@@ -77,13 +78,6 @@ authRouter.post('/auth/reset-password/complete', authController.completePassword
  * @access Private
  * *********************************************************************/
 authRouter.post('/auth/:userId/mfa/enable', authenticate, csrfProtection, authController.enableMfa);
-
-/***********************************************************************
- * @route POST /auth/:userId/mfa/disable
- * @desc Disable multi-factor authentication for a user account.
- * @access Private
- * *********************************************************************/
-authRouter.post('/auth/:userId/mfa/start-verify', authenticate, csrfProtection, authController.disableMfa);
 
 /***********************************************************************
  * @route POST /auth/:userId/mfa/verify

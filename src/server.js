@@ -7,7 +7,6 @@ import sgMail from '@sendgrid/mail';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
-import csrf from '@fastify/csrf';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import passport from 'passport';
@@ -45,8 +44,6 @@ app.use(session({
             sameSite: 'None',
              httpOnly: true,}
 }));
-
-app.use(csrf({ cookie: false }));
 
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' ? 'https://speedscore.org' : 'http://localhost:3000',

@@ -38,6 +38,7 @@ passport.use(new GithubStrategy({
       user = new User({
         accountInfo: {
           email: profile.emails[0].value,
+          password: null, // No password needed
           oauthProvider: 'github',
           emailVerified: true
         },

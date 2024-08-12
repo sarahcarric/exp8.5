@@ -5,6 +5,8 @@
 import express from 'express';
 import { validateRound } from '../middleware/dataValidator.js';
 import * as roundController from '../controllers/roundController.js';
+import { authenticate } from '../middleware/authenticate.js';
+import {csrfProtection } from '../middleware/csrfProtection.js';
 
 const roundRouter = express.Router();
 
@@ -14,7 +16,7 @@ const roundRouter = express.Router();
  * @access Public
  * @returns {Array} - An array of round objects.
  * *********************************************************************/
-roundRouter.get('/users/:userId/rounds', roundController.getRounds);
+roundRouter.get('/users/:userId/rounds', authenticate, roundController.getRounds);
 
 /***********************************************************************
  * @route POST /users/:userId/rounds
