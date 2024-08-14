@@ -165,7 +165,7 @@ export default {
   },
 
   /***********************************************************************
-   * refreshAccessToken 
+   * refreshToken 
    * @descr Refresh the access token using the refresh token.
    * @param {string} userId - The id of the user to refresh the token for.
    * @param {string} refreshToken - The refresh token to use to refresh the
@@ -173,7 +173,7 @@ export default {
    * @returns {Promise<Object>} An object containing the new access token
    *         and its expiry date.
    *************************************************************************/
-  refreshToken: async (refreshToken ) => {
+  refreshToken: async (userId, refreshToken ) => {
     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
     if (decoded.userId !== userId) {
       throw new InvalidRefreshTokenError('Invalid refresh token');

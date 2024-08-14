@@ -3,7 +3,10 @@
  * @desc Contains the controller functions for handling Oauth requests.
  *************************************************************************/
 import authService from '../services/authService.js';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import passport from 'passport';
+import { UserNotFoundError, InvalidAccessTokenError, InvalidAntiCsrfTokenError, InvalidOauthTokenError } from '../utils/errors.js';
 
 /***********************************************************************
  * loginUser (POST /auth/login)
@@ -36,6 +39,45 @@ export const loginUser = async (req, res, next) => {
 }
 
 /***********************************************************************
+ * logoutUser (POST /auth/logout)
+ * @desc Log out a user.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ * @returns a 200 status code if user could be logged out successfully.
+ *************************************************************************/
+export const logoutUser = (req, res, next) => {
+  const accessToken = req.cookies.accessToken;
+  const antiCsrfToken = req.headers['x-anti-csrf-token'];
+  res.clearCookie('refreshToken');
+  if (!accessToken) {
+    return res.status(200).json({ message: 'Logged out successfully' });
+  }
+  if (antiCsrfToken !== req.session.antiCsrfToken) {
+    return next(new InvalidAntiCsrfTokenError("Invalid anti-CSRF token"));
+  }
+  try {
+    // Verify the access token
+    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+    // Ensure the user in the token matches the user attached to the route
+    if (req.params.userId && req.params.userId !== decoded.userId) {
+      return next(new InvalidAccessTokenError("User ID does not match the token"));
+    }
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    return res.status(200).json({ message: 'Logged out successfully' });
+  } catch (err) {
+    // Handle token verification errors
+    if (err.name === 'TokenExpiredError') {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      return res.status(200).json({ message: 'Logged out successfully' });
+    }
+    return next(new InvalidAccessTokenError("Invalid access token"));
+  }
+};
+
+/***********************************************************************
  * refreshToken (POST /auth/refresh-token)
  * @desc If the user's refresh token is valid and unexpired, refresh
  *       the token and the anti-CSRF token.
@@ -46,9 +88,9 @@ export const loginUser = async (req, res, next) => {
  * @returns An object containing the user's new access token's 
  *          epiration date and new anti-CSRF token.
  *************************************************************************/
-export const refreshToken = async (req, res) => {
+export const refreshToken = async (req, res, next) => {
   try {
-    const result = await authService.refreshToken(refreshToken);
+    const result = await authService.refreshToken(req.params.userId, req.cookies.refreshToken);
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -247,7 +289,15 @@ export const getAntiCsrfToken = (req, res) => {
  * @param {Object} res - The response object.
  * @returns {void}
  *************************************************************************/
-export const githubAuth = passport.authenticate('github', { scope: ['user:email', 'read:user'] });
+export const githubAuth = (req, res, next) => {
+  const oauthToken = crypto.randomBytes(32).toString('hex');
+  res.cookie('oauthToken', oauthToken, { httpOnly: true, secure: true });
+
+  passport.authenticate('github', {
+    scope: ['user:email', 'read:user'],
+    state: oauthToken
+  })(req, res, next);
+};
 
 /***********************************************************************
  * githubCallback (GET /auth/github/callback)
@@ -258,12 +308,16 @@ export const githubAuth = passport.authenticate('github', { scope: ['user:email'
  * @returns {void}
  *************************************************************************/
 export const githubCallback = (req, res, next) => {
+  const oauthToken = req.cookies.oauthToken
+  if (req.query.state !== oauthToken) {
+    return next(new InvalidOauthTokenError("State token returned by Github does not match session token"));
+  }
   passport.authenticate('github', (err, user) => {
     if (err) {
-      return res.status(500).json({ error: 'Authentication failed', message: err.message});
+      return next(err);
     }
     if (!user) {
-      return res.status(401).json({error: 'Login failed. No user found' });
+      return next(new UserNotFoundError('Login failed. No user found'));
     }
     req.user = user;
     res.status(200).send(`User logged in successfully: ${req.user.accountInfo.email}`);

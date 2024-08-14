@@ -72,6 +72,14 @@ export class InvalidAntiCsrfTokenError extends Error {
   }
 }
 
+export class InvalidOauthTokenError extends Error {
+  constructor(message = 'Invalid OAuth state token') {
+    super(message);
+    this.name = 'InvalidOAuthTokenError';
+    this.statusCode = 403; // Forbidden
+  }
+}
+
 // Round object errors
 export class RoundNotFoundError extends Error {
   constructor(message = 'Round not found') {

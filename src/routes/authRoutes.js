@@ -20,13 +20,11 @@ const authRouter = express.Router();
 authRouter.post('/auth/login', validateUserLogin, authController.loginUser);
 
 /***********************************************************************
- * @route POST /auth/refresh-token
- * @desc Refresh the user's JWT.
- * @access Public
- * @returns {Object} - An object containing the users's new access
- *                    token and its expiration date.
+ * @route POST /auth/logout
+ * @desc Log out a user.
+ * @access Private
  * *********************************************************************/
-authRouter.post('/auth/refresh-token', authController.refreshToken);
+authRouter.post('/auth/logout/:userId', authController.logoutUser);
 
 /***********************************************************************
  * @route POST /auth/register
@@ -73,25 +71,34 @@ authRouter.post('/auth/reset-password/verify', authController.verifyPasswordRese
 authRouter.post('/auth/reset-password/complete', authController.completePasswordReset);
 
 /***********************************************************************
- * @route POST /auth/logout
- * @desc Log out the user.
+ * @route POST /auth/refresh-token
+ * @desc Refresh the user's JWT.
+ * @access Public
+ * @returns {Object} - An object containing the users's new access
+ *                    token and its expiration date.
+ * *********************************************************************/
+authRouter.post('/auth/refresh-token/:userId', authController.refreshToken);
+
+/***********************************************************************
+ * @route POST /auth/:userId/mfa/enable
+ * @desc Begin the process of enabling multi-factor authentication.
  * @access Private
  * *********************************************************************/
-authRouter.post('/auth/:userId/mfa/enable', authenticate, csrfProtection, authController.enableMfa);
+authRouter.post('/auth/mfa/enable/:userId', authenticate, csrfProtection, authController.enableMfa);
 
 /***********************************************************************
  * @route POST /auth/:userId/mfa/verify
  * @desc Verify a multi-factor authentication code.
  * @access Private
  * *********************************************************************/
-authRouter.post('/auth/:userId/mfa/verify', authenticate, csrfProtection, authController.verifyMfa);
+authRouter.post('/auth/mfa/verify/:userId', authenticate, csrfProtection, authController.verifyMfa);
 
 /***********************************************************************
  * @route GET /auth/anti-csrf-token
  * @desc Get the anti-CSRF token associated with the user's session.
  * @access Public
  * *********************************************************************/
-authRouter.get('/auth/anti-csrf-token', authenticate, authController.getAntiCsrfToken);
+authRouter.get('/auth/anti-csrf-token/:userId', authenticate, authController.getAntiCsrfToken);
 
 /***********************************************************************
  * @route GET /auth/github
