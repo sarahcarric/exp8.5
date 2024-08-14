@@ -27,6 +27,7 @@ export const loginUser = async (req, res, next) => {
     };
     res.cookie('accessToken', result.accessToken, cookieOptions);
     res.cookie('refreshToken', result.refreshToken, {...cookieOptions, maxAge: 604800000 });
+    req.session.user = result.user;
     req.session.antiCsrfToken = result.antiCsrfToken;
     res.status(200).json({
       accessTokenExpiry: result.accessTokenExpiry,
@@ -276,8 +277,7 @@ export const verifyMfa = async (req, res, next) => {
  * @param {Object} res - The response object.
  *************************************************************************/
 export const getAntiCsrfToken = (req, res) => {
-  const antiCsrfToken = req.csrfToken();
-  res.status(200).json({ antiCsrfToken });
+  res.status(200).json({antiCsrfToken: req.session.antiCsrfToken});
 };
 
 /***********************************************************************
