@@ -22,13 +22,8 @@ export const authenticate = (req, res, next) => {
   }
 
   try {
-    // Verify the access token
+    // Verify the access token; will throw error if invalid
     const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
-
-    // Ensure the user in the token matches the user attached to the route
-    if (req.params.userId && req.params.userId !== decoded.userId) {
-      return next(new InvalidAccessTokenError("User ID does not match the token"));
-    }
     req.user = decoded;
     next();
   } catch (err) {

@@ -5,6 +5,7 @@
 import express from 'express';
 import * as userController from '../controllers/userController.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { csrfProtection } from '../middleware/csrfProtection.js';
 
 const userRouter = express.Router();
 
@@ -14,7 +15,7 @@ const userRouter = express.Router();
  * @access Public
  * @returns {Array} - An array of user objects.
  * *********************************************************************/
-userRouter.get('/users', authenticate, userController.getUsers);
+userRouter.get('/users', authenticate, csrfProtection, userController.getUsers);
 
 //userRouter.put('/users/:userId', userController.updateUser);
 

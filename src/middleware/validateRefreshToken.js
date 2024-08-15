@@ -24,11 +24,6 @@ export const validateRefreshToken = (req, res, next) => {
   try {
     // Verify the access token
     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
-
-    // Ensure the user in the token matches the user attached to the route
-    if (req.params.userId && req.params.userId !== decoded.id) {
-      return next(new InvalidAccessTokenError("User ID does not match the token"));
-    }
     req.user = decoded;
     next();
   } catch (err) {
@@ -37,5 +32,4 @@ export const validateRefreshToken = (req, res, next) => {
       }
       return next(new InvalidAccessTokenError("Invalid refresh token"));
     }
-  }
-};
+}
