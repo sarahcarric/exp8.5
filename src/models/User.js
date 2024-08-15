@@ -65,6 +65,11 @@ const userSchema = new mongoose.Schema({
       type: String,
       enum: ['none', 'github'],
       default: 'none'
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user'
     }
   },
   identityInfo: {

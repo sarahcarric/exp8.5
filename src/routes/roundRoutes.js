@@ -6,6 +6,7 @@ import express from 'express';
 import { validateRound } from '../middleware/dataValidator.js';
 import * as roundController from '../controllers/roundController.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { authorize } from '../middleware/authorize.js';
 import {csrfProtection } from '../middleware/csrfProtection.js';
 
 const roundRouter = express.Router();
@@ -16,7 +17,7 @@ const roundRouter = express.Router();
  * @access Public
  * @returns {Array} - An array of round objects.
  * *********************************************************************/
-roundRouter.get('/users/:userId/rounds', authenticate, roundController.getRounds);
+roundRouter.get('/users/:userId/rounds', authenticate, authorize, roundController.getRounds);
 
 /***********************************************************************
  * @route POST /users/:userId/rounds
@@ -24,7 +25,7 @@ roundRouter.get('/users/:userId/rounds', authenticate, roundController.getRounds
  * @access Public
  * @returns {Object} - The updated user object.
  * *********************************************************************/
-roundRouter.post('/users/:userId/rounds', authenticate, csrfProtection, validateRound, roundController.addRound);
+roundRouter.post('/users/:userId/rounds', authenticate, csrfProtection, authorize, validateRound, roundController.addRound);
 
 //roundRouter.put('/users/:userId/rounds/:roundId', roundController.updateRound);
 

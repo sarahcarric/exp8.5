@@ -7,6 +7,8 @@ import { githubAuth, githubCallback } from '../controllers/authController.js';
 import * as authController from '../controllers/authController.js';
 import { validateUserLogin, validateUser } from '../middleware/dataValidator.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { validateRefreshToken } from '../middleware/validateRefreshToken.js';
+import { authorize } from '../middleware/authorize.js';
 import {csrfProtection } from '../middleware/csrfProtection.js';
 
 const authRouter = express.Router();
@@ -24,7 +26,7 @@ authRouter.post('/auth/login', validateUserLogin, authController.loginUser);
  * @desc Log out a user.
  * @access Private
  * *********************************************************************/
-authRouter.post('/auth/logout/:userId', authenticate, csrfProtection, authController.logoutUser);
+authRouter.post('/auth/logout/:userId', authenticate, csrfProtection, authorize, authController.logoutUser);
 
 /***********************************************************************
  * @route POST /auth/register
@@ -77,28 +79,28 @@ authRouter.post('/auth/reset-password/complete', authController.completePassword
  * @returns {Object} - An object containing the users's new access
  *                    token and its expiration date.
  * *********************************************************************/
-authRouter.post('/auth/refresh-token/:userId', authController.refreshToken);
+authRouter.post('/auth/refresh-token/:userId', validateRefreshToken, authorize, authController.refreshToken);
 
 /***********************************************************************
  * @route POST /auth/:userId/mfa/enable
  * @desc Begin the process of enabling multi-factor authentication.
  * @access Private
  * *********************************************************************/
-authRouter.post('/auth/mfa/enable/:userId', authenticate, csrfProtection, authController.enableMfa);
+authRouter.post('/auth/mfa/enable/:userId', authenticate, csrfProtection, authorize, authController.enableMfa);
 
 /***********************************************************************
  * @route POST /auth/:userId/mfa/verify
  * @desc Verify a multi-factor authentication code.
  * @access Private
  * *********************************************************************/
-authRouter.post('/auth/mfa/verify/:userId', authenticate, csrfProtection, authController.verifyMfa);
+authRouter.post('/auth/mfa/verify/:userId', authenticate, csrfProtection, authorize, authController.verifyMfa);
 
 /***********************************************************************
  * @route GET /auth/anti-csrf-token
  * @desc Get the anti-CSRF token associated with the user's session.
  * @access Public
  * *********************************************************************/
-authRouter.get('/auth/anti-csrf-token/:userId', authenticate, authController.getAntiCsrfToken);
+authRouter.get('/auth/anti-csrf-token/:userId', authenticate, authorize, authController.getAntiCsrfToken);
 
 /***********************************************************************
  * @route GET /auth/github

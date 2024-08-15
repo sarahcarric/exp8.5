@@ -25,7 +25,7 @@ export const validateRefreshToken = (req, res, next) => {
     // Verify the access token
     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
     req.user = decoded;
-    next();
+    return next();
   } catch (err) {
       if (err.name === 'TokenExpiredError') {
         return next(new InvalidAccessTokenError("Refresh token has expired"));
