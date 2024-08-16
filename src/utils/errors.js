@@ -88,6 +88,14 @@ export class UnauthorizedError extends Error {
   }
 }
 
+export class TooManyRequestsError extends Error {
+  constructor(message = 'Too many requests') {
+    super(message);
+    this.name = 'TooManyRequestsError';
+    this.statusCode = 429; // Too Many Requests
+  }
+}
+
 // Round object errors
 export class RoundNotFoundError extends Error {
   constructor(message = 'Round not found') {

@@ -15,6 +15,7 @@ import userRouter from './routes/userRoutes.js';
 import roundRouter from './routes/roundRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
+import rateLimiter from './middleware/rateLimiter.js';
 
 dotenv.config();
 
@@ -31,6 +32,8 @@ mongoose.connect(connectStr)
 
 //Initialize Express app
 const app = express();
+
+app.use(rateLimiter);
 
 app.use(cookieParser());
 //Install built-in Express body-parser middleware
