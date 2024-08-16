@@ -26,7 +26,7 @@ authRouter.post('/auth/login', validateUserLogin, authController.loginUser);
  * @desc Log out a user.
  * @access Private
  * *********************************************************************/
-authRouter.post('/auth/logout/:userId', authenticate, csrfProtection, authorize, authController.logoutUser);
+authRouter.delete('/auth/logout/:userId', authenticate, csrfProtection, authorize, authController.logoutUser);
 
 /***********************************************************************
  * @route POST /auth/register
