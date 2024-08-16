@@ -17,23 +17,25 @@ import { UserNotFoundError, InvalidAccessTokenError, InvalidAntiCsrfTokenError, 
  *************************************************************************/
 export const loginUser = async (req, res, next) => {
   try {
-    const result = await authService.loginUser(req.body.email, req.body.password);
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'None',
-      domain: process.env.COOKIE_DOMAIN,
-      maxAge: 3600000
-    };
-    res.cookie('accessToken', result.accessToken, cookieOptions);
-    res.cookie('refreshToken', result.refreshToken, {...cookieOptions, maxAge: 604800000 });
-    req.session.user = result.user;
-    req.session.antiCsrfToken = result.antiCsrfToken;
-    res.status(200).json({
-      accessTokenExpiry: result.accessTokenExpiry,
-      refreshTokenExpiry: result.refreshTokenExpiry,
-      antiCsrfToken: result.antiCsrfToken
-    });
+    const user = await authService.loginUser(req.body.email, req.body.password);
+    req.user = user;
+    next();
+    // const cookieOptions = {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === 'production',
+    //   sameSite: 'None',
+    //   domain: process.env.COOKIE_DOMAIN,
+    //   maxAge: 3600000
+    // };
+    // res.cookie('accessToken', result.accessToken, cookieOptions);
+    // res.cookie('refreshToken', result.refreshToken, {...cookieOptions, maxAge: 604800000 });
+    // req.session.user = result.user;
+    // req.session.antiCsrfToken = result.antiCsrfToken;
+    // res.status(200).json({
+    //   accessTokenExpiry: result.accessTokenExpiry,
+    //   refreshTokenExpiry: result.refreshTokenExpiry,
+    //   antiCsrfToken: result.antiCsrfToken
+    // });
   } catch (err) {
     next(err);
   } 
@@ -50,8 +52,8 @@ export const loginUser = async (req, res, next) => {
 export const logoutUser = (req, res, next) => {
   const accessToken = req.cookies.accessToken;
   const antiCsrfToken = req.headers['x-anti-csrf-token'];
-  res.clearCookie('refreshToken');
   if (!accessToken) {
+    res.clearCookie('refreshToken');
     return res.status(200).json({ message: 'Logged out successfully' });
   }
   if (antiCsrfToken !== req.session.antiCsrfToken) {
@@ -60,10 +62,6 @@ export const logoutUser = (req, res, next) => {
   try {
     // Verify the access token
     const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
-    // Ensure the user in the token matches the user attached to the route
-    if (req.params.userId && req.params.userId !== decoded.userId) {
-      return next(new InvalidAccessTokenError("User ID does not match the token"));
-    }
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     return res.status(200).json({ message: 'Logged out successfully' });
@@ -320,6 +318,7 @@ export const githubCallback = (req, res, next) => {
       return next(new UserNotFoundError('Login failed. No user found'));
     }
     req.user = user;
-    res.status(200).send(`User logged in successfully: ${req.user.accountInfo.email}`);
+    next();
+    //res.status(200).send(`User logged in successfully: ${req.user.accountInfo.email}`);
   })(req, res, next);
 };

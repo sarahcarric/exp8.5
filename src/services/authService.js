@@ -133,13 +133,14 @@ export default {
     delete userObject.accountInfo.securityQuestion;
     delete userObject.accountInfo.securityAnswer;
     delete userObject.__v;
-    const accessToken = jwt.sign({userId: user._id}, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const refreshToken = jwt.sign({userId: user._id}, process.env.JWT_SECRET, { expiresIn: '7d' });
-    const accessTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-    const refreshTokenExpiry = new Date(Date.now() + 604800000); // 7 days
-    const antiCsrfToken = crypto.randomBytes(32).toString('hex');
-    return {user: userObject, accessToken, refreshToken, 
-            accessTokenExpiry, refreshTokenExpiry, antiCsrfToken};
+    return userObject;
+    // const accessToken = jwt.sign({userId: user._id}, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // const refreshToken = jwt.sign({userId: user._id}, process.env.JWT_SECRET, { expiresIn: '7d' });
+    // const accessTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+    // const refreshTokenExpiry = new Date(Date.now() + 604800000); // 7 days
+    // const antiCsrfToken = crypto.randomBytes(32).toString('hex');
+    // return {user: userObject, accessToken, refreshToken, 
+    //         accessTokenExpiry, refreshTokenExpiry, antiCsrfToken};
   },
 
   /***********************************************************************

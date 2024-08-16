@@ -9,7 +9,8 @@ import { validateUserLogin, validateUser } from '../middleware/dataValidator.js'
 import { authenticate } from '../middleware/authenticate.js';
 import { validateRefreshToken } from '../middleware/validateRefreshToken.js';
 import { authorize } from '../middleware/authorize.js';
-import {csrfProtection } from '../middleware/csrfProtection.js';
+import { csrfProtection } from '../middleware/csrfProtection.js';
+import { configureSession } from '../middleware/configureSession.js';
 
 const authRouter = express.Router();
 
@@ -19,7 +20,7 @@ const authRouter = express.Router();
  * @access Public
  * @returns {Object} - The user object.
  * *********************************************************************/
-authRouter.post('/auth/login', validateUserLogin, authController.loginUser);
+authRouter.post('/auth/login', validateUserLogin, authController.loginUser, configureSession);
 
 /***********************************************************************
  * @route POST /auth/logout
@@ -109,13 +110,13 @@ authRouter.get('/auth/anti-csrf-token/:userId', authenticate, authorize, authCon
  *      'read:user' to request access to the user's email and profile.
  * @access Public
  * *********************************************************************/
-authRouter.get('/auth/github', githubAuth);
+authRouter.get('/auth/github', authController.githubAuth);
 
 /***********************************************************************
  * @route GET /auth/github/callback
  * @desc Callback function after the user has authenticated with GitHub.
  * @access Public
  * *********************************************************************/
-authRouter.get('/auth/github/callback', githubCallback);
+authRouter.get('/auth/github/callback', authController.githubCallback, configureSession);
 
 export default authRouter;

@@ -5,7 +5,7 @@
  *************************************************************************/
 
 import jwt from 'jsonwebtoken';
-import { InvalidAccessTokenError } from '../errors';
+import { InvalidAccessTokenError } from '../utils/errors.js';
 
 /*************************************************************************
  * @func validateRefreshToken
