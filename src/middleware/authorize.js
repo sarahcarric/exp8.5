@@ -25,11 +25,18 @@ const accessRules = {
       'GET': () => true 
     },
     'auth': {
-      'POST': () => true,
-      'PUT': () => true, 
-      'DELETE': () => true, 
-      'GET': () => true 
-    },
+      'POST': (resourceId, userId) => {
+        return (resourceId === userId);
+      },
+      'PUT': (resourceId, userId) => {
+        return (resourceId === userId);
+      },
+      'DELETE': (resourceId, userId) => {
+        return (resourceId === userId);
+      },
+      'GET':  (resourceId, userId) => {
+        return (resourceId === userId);
+      }
   },
   'user': {
     'users': {
@@ -56,7 +63,7 @@ const accessRules = {
       },
       'GET':  (resourceId, userId) => {
         return (resourceId === userId);
-      },
+      }
     }
   }
 };
