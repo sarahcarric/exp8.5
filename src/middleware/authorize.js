@@ -37,6 +37,7 @@ const accessRules = {
       'GET':  (resourceId, userId) => {
         return (resourceId === userId);
       }
+    }
   },
   'user': {
     'users': {

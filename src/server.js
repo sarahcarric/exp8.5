@@ -31,7 +31,7 @@ mongoose.connect(connectStr)
   );
 
 //Initialize Express app
-const app = express();
+export const app = express();
 
 app.use(rateLimiter);
 
