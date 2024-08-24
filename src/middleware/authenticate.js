@@ -15,6 +15,7 @@ import { InvalidAccessTokenError } from '../utils/errors.js';
  * @param {Function} next - The next middleware function.
  ************************************************************************/
 export const authenticate = (req, res, next) => {
+  //console.log("In authenticate. req.session:", JSON.stringify(req.session));
   const accessToken = req.cookies.accessToken;
 
   if (!accessToken) {
@@ -24,7 +25,6 @@ export const authenticate = (req, res, next) => {
   try {
     // Verify the access token; will throw error if invalid
     const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
-    req.user = decoded;
     next();
   } catch (err) {
       if (err.name === 'TokenExpiredError') {

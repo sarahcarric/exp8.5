@@ -10,58 +10,15 @@ import { UserAlreadyVerifiedError, UserNotFoundError,
          InvalidRefreshTokenError, UserPasswordInvalidError, 
          UserPasswordResetCodeInvalidError, MfaSessionError} 
          from '../utils/errors.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from './emailService.js';
 import bcrypt from 'bcrypt'; 
 import jwt from 'jsonwebtoken';
-import sgMail from '@sendgrid/mail';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
 
 const MAX_MFA_TIME = 60 * 1000 * 10 //10 minutes
 const MAX_MFA_ATTEMPTS = 5;
-
-/***********************************************************************
- * sendVerificationEmail
- * @descr Send a verification email to the user.
- * @param {string} email - The email address to send the verification email to.
- * @param {string} verificationToken - The token to verify the user.
- * @returns {Promise<void>}
- * @throws {Error} If the email fails to send.
- *************************************************************************/
-const sendVerificationEmail = async (email, verificationToken) => {
-  const verificationUrl =
-    `${process.env.API_DEPLOYMENT_URL}/auth/verify-email/${verificationToken}`;
-  const message = {
-    to: email,
-    from: process.env.SENDGRID_FROM_ADDRESS, 
-    subject: 'SpeedScore: Verify Your Email Address',
-    text: `Please use the following link to verify ` +
-            `your email address: ${verificationUrl}`,
-    html: `<p>Please click on the following link to verify ` +
-            `your email address:` +
-        `<a href="${verificationUrl}">Verify Email</a></p>`
-  };
-  await sgMail.send(message);
-};
-
-/***********************************************************************
- * sendPasswordResetEmail
- * @descr Send a password reset email to the user.
- * @param {string} email - The email address to send the password reset email to.
- * @param {string} resetCode - The code to reset the user's password.
- * @returns {Promise<void>}
- * @throws {Error} If the email fails to send.
- *************************************************************************/
-const sendPasswordResetEmail = async (email, resetCode) => {
-  const message = {
-    to: email,
-    from: process.env.SENDGRID_FROM_ADDRESS,
-    subject: 'SpeedScore: Password Reset Code',
-    text: `Your password reset code is: ${resetCode}`,
-    html: `<p>Your password reset code is: <strong>${resetCode}</strong></p>`
-  };
-  await sgMail.send(message);
-};
 
 /***********************************************************************
  * encryptMfaSecret
@@ -134,13 +91,6 @@ export default {
     delete userObject.accountInfo.securityAnswer;
     delete userObject.__v;
     return userObject;
-    // const accessToken = jwt.sign({userId: user._id}, process.env.JWT_SECRET, { expiresIn: '1h' });
-    // const refreshToken = jwt.sign({userId: user._id}, process.env.JWT_SECRET, { expiresIn: '7d' });
-    // const accessTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-    // const refreshTokenExpiry = new Date(Date.now() + 604800000); // 7 days
-    // const antiCsrfToken = crypto.randomBytes(32).toString('hex');
-    // return {user: userObject, accessToken, refreshToken, 
-    //         accessTokenExpiry, refreshTokenExpiry, antiCsrfToken};
   },
 
   /***********************************************************************
@@ -152,10 +102,10 @@ export default {
    *************************************************************************/
   registerUser: async (newUser) => {
     const salt = await bcrypt.genSalt(10);
-    newUser.accountInfo.password = await bcrypt.hash(newUser.accountInfo.password, salt);
-    const verificationToken = jwt.sign({email: newUser.accountInfo.email}, process.env.JWT_SECRET, { expiresIn: '1d' });
-    sendVerificationEmail(newUser.accountInfo.email, verificationToken);
-    const user = new User(newUser);
+    newUser.password = await bcrypt.hash(newUser.password, salt);
+    const verificationToken = jwt.sign({email: newUser.email}, process.env.JWT_SECRET, { expiresIn: '1d' });
+    sendVerificationEmail(newUser.email, verificationToken);
+    const user = new User({accountInfo: {email: newUser.email, password: newUser.password}});
     await user.save();
     const userObject = user.toObject();
     delete userObject.accountInfo.password;
@@ -291,7 +241,9 @@ export default {
    *************************************************************************/
 
   enableMfa: async (userId) => {
+    //console.log("In enableMfa with userId: ", userId);
     const user  = await User.findById(userId);
+    //console.log("In enableMfa with user: ", user);
     if (!user) {
       throw new UserNotFoundError('User with id ' + userId + ' not found');
     }
@@ -304,6 +256,8 @@ export default {
     user.accountInfo.mfaSecret = encryptMfaSecret(secret);
     user.accountInfo.mfaVerified = false;
     await user.save();
+    //console.log("In enableFma with secret: ", secret);
+    //console.log("In enableMfa with qrCodeDataUrl: ", qrCodeDataUrl);
     return {secret, qrCodeDataUrl};
   },
 
@@ -358,9 +312,8 @@ export default {
     if (!isValid) {
       user.accountInfo.mfaAttempts++; // Increment mfaAttempts on failure
       await user.save();
-      return false;
+      throw new MfaSessionError('Invalid MFA token');
   }
-
   // On successful verification, reset the counter and start time
   user.accountInfo.mfaVerified = true;
   user.accountInfo.mfaAttempts = 0;

@@ -18,11 +18,23 @@ export default {
     return users.map(user => {
                       const userObject = {...user};
                       delete userObject.accountInfo.password;
-                      delete userObject.accountInfo.securityQuestion;
-                      delete userObject.accountInfo.securityAnswer;
                       delete userObject.__v;
                       return userObject;
                     }
                   );
+  },
+
+  /***********************************************************************
+   * getUser
+   * @descr Get a user by ID.
+   * @param {string} userId - The ID of the user to retrieve.
+   * @returns {Promise<Object>} The user object.
+  *************************************************************************/
+  getUser: async (userId) => {
+    const user = await User.findById(userId).lean();
+    const userObject = {...user};
+    delete userObject.accountInfo.password;
+    delete userObject.__v;
+    return userObject;
   }
-};
+}

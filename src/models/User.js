@@ -59,7 +59,7 @@ const userSchema = new mongoose.Schema({
     },
     mfaStartTime: {
       type: Date,
-      default: Date.now
+      default: null
     },
     oauthProvider: {
       type: String,

@@ -16,6 +16,7 @@ import roundRouter from './routes/roundRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 import rateLimiter from './middleware/rateLimiter.js';
+//import includeSessionInResponse from './middleware/includeSessionInResponse.js';
 
 dotenv.config();
 
@@ -30,8 +31,10 @@ mongoose.connect(connectStr)
     err => {console.error(`Error connecting to ${connectStr}: ${err}`)}
   );
 
+const db = mongoose.connection;
+
 //Initialize Express app
-export const app = express();
+const app = express();
 
 app.use(rateLimiter);
 
@@ -56,6 +59,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(passport.initialize());
 
+//process.env.NODE_ENV === 'test' && app.use(includeSessionInResponse);
+
 //Install app routes
 app.use(userRouter);
 app.use(roundRouter);
@@ -66,4 +71,6 @@ app.use(errorHandler);
 
 //Start server
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server running on port ${port}...`));
+const server = app.listen(port, () => console.log(`Server running on port ${port}...`));
+
+export { app, server, db};

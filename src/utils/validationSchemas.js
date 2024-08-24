@@ -4,7 +4,10 @@
  *************************************************************************/
 
 import Joi from 'joi';
+
 export const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+export const passwordRegEx = /(?=.*[0-9])(?=.*[A-Z])/;
 
 export const roundJoiSchema = Joi.object({
   date: Joi.date().required(),

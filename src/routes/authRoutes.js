@@ -5,7 +5,7 @@
 import express from 'express';
 import { githubAuth, githubCallback } from '../controllers/authController.js';
 import * as authController from '../controllers/authController.js';
-import { validateUserLogin, validateUser } from '../middleware/dataValidator.js';
+import { validateUserLogin, validateUserRegistration } from '../middleware/dataValidator.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { validateRefreshToken } from '../middleware/validateRefreshToken.js';
 import { authorize } from '../middleware/authorize.js';
@@ -35,7 +35,7 @@ authRouter.delete('/auth/logout/:userId', authenticate, csrfProtection, authoriz
  *       verification link they must click to activate their account.  
  * @access Public
  * *********************************************************************/
-authRouter.post('/auth/register', validateUser, authController.registerUser);
+authRouter.post('/auth/register', validateUserRegistration, authController.registerUser);
 
 /***********************************************************************
  * @route GET /users/verify-email/:token
@@ -90,8 +90,15 @@ authRouter.post('/auth/refresh-token/:userId', validateRefreshToken, authorize, 
 authRouter.post('/auth/mfa/enable/:userId', authenticate, csrfProtection, authorize, authController.enableMfa);
 
 /***********************************************************************
+ * @route POST /auth/mfa/start-verify/:userId
+ * @desc Begin the process of verifying multi-factor authentication.
+ * @access Private
+ * *********************************************************************/
+authRouter.post('/auth/mfa/start-verify/:userId', authenticate, csrfProtection, authorize, authController.startVerifyMfa);
+
+/***********************************************************************
  * @route POST /auth/:userId/mfa/verify
- * @desc Verify a multi-factor authentication code.
+ * @desc Verify a multi-factor authentication code to enable MFA.
  * @access Private
  * *********************************************************************/
 authRouter.post('/auth/mfa/verify/:userId', authenticate, csrfProtection, authorize, authController.verifyMfa);

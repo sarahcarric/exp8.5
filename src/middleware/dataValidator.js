@@ -3,7 +3,7 @@
  * @desc Validates incoming data for the user and round routes using Joi
  *************************************************************************/
 import Joi from 'joi';
-import {emailRegex, userJoiSchema, roundJoiSchema} from '../utils/validationSchemas.js';
+import {emailRegex, passwordRegEx, userJoiSchema, roundJoiSchema} from '../utils/validationSchemas.js';
 
 /*************************************************************************
  * @func validateUserLogin
@@ -26,8 +26,30 @@ export const validateUserLogin = (req, res, next) => {
 };
 
 /*************************************************************************
- * @func validateUser
+ * @func validateUserRegistration
  * @desc Validates the user registration request.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ ************************************************************************/
+export const validateUserRegistration = (req, res, next) => {
+  const registrationSchema = Joi.object({
+    email: Joi.string().trim().required().pattern(emailRegex)
+      .message('is not a valid email address'),
+    password: Joi.string().required().min(8)
+      .pattern(passwordRegEx)
+      .message('must be at least 8 characters long and contain at least one number and one uppercase letter')
+  });
+  const { error } = registrationSchema.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({ errors: error.details.map(detail => detail.message) });
+  }
+  next();
+};
+
+/*************************************************************************
+ * @func validateUser
+ * @desc Validates user objects in PUT requests.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.

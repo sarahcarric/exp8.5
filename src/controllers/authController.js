@@ -19,23 +19,7 @@ export const loginUser = async (req, res, next) => {
   try {
     const user = await authService.loginUser(req.body.email, req.body.password);
     req.user = user;
-    next();
-    // const cookieOptions = {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'None',
-    //   domain: process.env.COOKIE_DOMAIN,
-    //   maxAge: 3600000
-    // };
-    // res.cookie('accessToken', result.accessToken, cookieOptions);
-    // res.cookie('refreshToken', result.refreshToken, {...cookieOptions, maxAge: 604800000 });
-    // req.session.user = result.user;
-    // req.session.antiCsrfToken = result.antiCsrfToken;
-    // res.status(200).json({
-    //   accessTokenExpiry: result.accessTokenExpiry,
-    //   refreshTokenExpiry: result.refreshTokenExpiry,
-    //   antiCsrfToken: result.antiCsrfToken
-    // });
+    next(); //transfer execution to configureSession middleware
   } catch (err) {
     next(err);
   } 
@@ -54,7 +38,7 @@ export const logoutUser = (req, res, next) => {
   const antiCsrfToken = req.headers['x-anti-csrf-token'];
   if (!accessToken) {
     res.clearCookie('refreshToken');
-    return res.status(200).json({ message: 'Logged out successfully' });
+    return res.status(200).json({ message: 'User logged out' });
   }
   if (antiCsrfToken !== req.session.antiCsrfToken) {
     return next(new InvalidAntiCsrfTokenError("Invalid anti-CSRF token"));
@@ -64,13 +48,14 @@ export const logoutUser = (req, res, next) => {
     const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
-    return res.status(200).json({ message: 'Logged out successfully' });
+    return res.status(200).json({message: 'User logged out' });
   } catch (err) {
+    console.log("Error verifying access token:", err);
     // Handle token verification errors
     if (err.name === 'TokenExpiredError') {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
-      return res.status(200).json({ message: 'Logged out successfully' });
+      return res.json({message: 'User logged out' });
     }
     return next(new InvalidAccessTokenError("Invalid access token"));
   }
@@ -165,7 +150,7 @@ export const verifyUserEmail = async (req, res, next) => {
 export const resendVerificationEmail = async (req, res, next) => {
   try {
     await authService.resendVerificationEmail(req.body.email);
-    res.status(200).send('Verification email sent to ' + req.body.email);
+    res.status(200).json({message: 'Verification email sent', email: req.body.email});
   } catch (err) {
     next(err);
   } 
@@ -181,7 +166,7 @@ export const resendVerificationEmail = async (req, res, next) => {
 export const requestPasswordReset = async (req, res, next) => {
   try {
     await authService.requestPasswordReset(req.body.email);
-    res.status(200).send('Password reset email sent to ' + req.body.email);
+    res.status(200).json({message: 'Password reset email sent', email: req.body.email});
   } catch (err) {
     next(err);
   }
@@ -197,7 +182,7 @@ export const requestPasswordReset = async (req, res, next) => {
 export const verifyPasswordReset = async (req, res, next) => {
   try {
     await authService.verifyPasswordReset(req.body.email, req.body.resetCode);
-    res.status(200).send('Password reset code verified');
+    res.status(200).json({message: 'Password reset code verified'});
   } catch (err) {
     next(err);
   } 
@@ -213,14 +198,14 @@ export const verifyPasswordReset = async (req, res, next) => {
 export const completePasswordReset = async (req, res, next) => {
   try {
     await authService.completePasswordReset(req.body.email, req.body.newPassword);
-    res.status(200).send('Password reset complete');
+    res.status(200).json({message: 'Password reset complete'});
   } catch (err) {
     next(err);
   } 
 }
 
 /***********************************************************************
- * enableMfa (POST /auth/:userId/mfa/enable)
+ * enableMfa (POST /auth/mfa/enable/:userId)
  * @desc Enable multi-factor authentication for a user account.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
@@ -236,7 +221,7 @@ export const enableMfa = async (req, res, next) => {
 }
 
 /***********************************************************************
- * startVerifyMfa (POST /auth/:userId/mfa/start-verify)
+ * startVerifyMfa (POST /auth/mfa/start-verify/:userId)
  * @desc Initiate an MFA verification session.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
@@ -245,14 +230,14 @@ export const enableMfa = async (req, res, next) => {
 export const startVerifyMfa = async (req, res, next) => {
   try {
     await authService.startVerifyMfa(req.params.userId);
-    res.status(200).send('MFA verification started');
+    res.status(200).json({ message: 'MFA verification started' });
   } catch (err) {
     next(err);
   }
 }
 
 /***********************************************************************
- * verifyMfa (POST /auth/:userId/mfa/verify)
+ * verifyMfa (POST /auth/mfa/verify/:userId)
  * @desc Verify a multi-factor authentication code for a user account.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
@@ -260,8 +245,8 @@ export const startVerifyMfa = async (req, res, next) => {
  *************************************************************************/
 export const verifyMfa = async (req, res, next) => {
   try {
-    const result = await authService.verifyMfa(req.params.userId, req.body.code);
-    res.status(200).send(result);
+    await authService.verifyMfa(req.params.userId, req.body.code);
+    res.status(200).json({ message: 'MFA code verified' });
   } catch (err) {
     next(err);
   }
