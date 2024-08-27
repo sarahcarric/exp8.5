@@ -36,4 +36,20 @@ export const getUser = async (req, res, next) => {
   }
 }
 
+/***********************************************************************
+ * deleteUser (DELETE /users/:userId)
+ * @desc Delete a user by ID.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ * *********************************************************************/
+export const deleteUser = async (req, res, next) => {
+  try {
+    const user = await userService.deleteUser(req.params.userId);
+    res.status(200).json(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
 

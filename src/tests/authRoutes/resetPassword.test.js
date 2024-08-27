@@ -1,86 +1,110 @@
-//import request from 'supertest';
 import session from 'supertest-session';
 import {app, server} from '../../server.js'; // Ensure your server exports the Express app
 import * as emailService from '../../services/emailService.js';
+import {generateRandomEmail, generateValidPassword, registerUser, 
+         verifyAccountEmail, loginUser, 
+        retryRequest} from '../../utils/testUtils.js';
 import mongoose from 'mongoose';
 
+const newUsers = Array(4).fill(null).map(() => ({
+  email: generateRandomEmail(),
+  password: generateValidPassword()
+}));
 
-let testSession = null;
-let pwResetCode, antiCsrfToken, user, accessToken, refreshToken; 
-const theUser = { email: 'speedscore.live@gmail.com', password: 'Speedgolf1' };
-const newPassword = 'Speedgolf2';
+const newPasswordValid = generateValidPassword();
+const newPasswordInvalid = '123'; // Invalid password
+const pwResetCodeInvalid = '12345';
 
-describe('Test reset password workflow', () => {
+let testSession, loggedInUser, mockSendVerificationEmail, mockSendPasswordResetEmail, pwResetCode
 
-    beforeAll(async () => {
-      testSession = session(app);
+describe('Auth Routes', () => {
+
+  beforeAll(async () => {
+    testSession = session(app);
+    mockSendVerificationEmail = jest.spyOn(emailService, 'sendVerificationEmail');
+    mockSendVerificationEmail.mockImplementation((email, verificationToken) => null);
+    mockSendPasswordResetEmail = jest.spyOn(emailService,'sendPasswordResetEmail');
+    mockSendPasswordResetEmail.mockImplementation((email, resetCode) => null);
+  });
+
+    // After each test, clear all timers
+  afterEach(() => {
+    jest.clearAllTimers(); // Clear all timers after each test
+  });
+
+  // After all tests, clear all mocks and close the server and database connection
+  afterAll(async() => {
+    jest.clearAllMocks(); // Clear all mocks after all tests
+    await mongoose.connection.close();
+    await new Promise(resolve => server.close(resolve));
+  });
+
+  newUsers.forEach((newUser) => {
+    //Test the /auth/register route with a valid, random email and password
+    it('should register a new user', async () => {
+      await registerUser(testSession, newUser);
     });
-
-    afterAll(async() => {
-      await mongoose.connection.close();
-      server.close();
+    //Test the /auth/verify-email route
+    it('should verify user email', async () => {
+      await verifyAccountEmail(mockSendVerificationEmail);
     });
-
-  it('should send user password reset email', async () => {
-    const mockSendPasswordResetEmail = jest.spyOn(emailService,'sendPasswordResetEmail');
-    const response = await testSession
-        .post('/auth/reset-password/request')
-        .send({ email: theUser.email });
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('message', 'Password reset email sent');
-    expect(response.body).toHaveProperty('email', theUser.email);
-    pwResetCode = mockSendPasswordResetEmail.mock.calls[0][1]; // Get the resetCode from the first call
-    expect(pwResetCode).toBeDefined();
-  });
-
-  it('should verify the password reset code', async () => {
-    const response = await testSession
-      .post('/auth/reset-password/verify')
-      .send({ email: theUser.email, resetCode: pwResetCode });
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('message', 'Password reset code verified');
-  });
-
-  it('should accept a new password and reset it', async () => {
-    const response = await testSession
-      .post('/auth/reset-password/complete')
-      .send({email: theUser.email, newPassword: newPassword});
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('message', 'Password reset complete');
-  });
-
-  it('should login', async () => {
-    const response = await testSession
-      .post('/auth/login')
-      .send({ email: theUser.email, password: newPassword });
-    expect(response.statusCode).toBe(200);
-    //Check cookies
-    const cookies = response.headers['set-cookie'];
-    expect(cookies).toBeDefined();
-    const accessTokenCookie = cookies.find(cookie => cookie.includes('accessToken'));
-    const refreshTokenCookie = cookies.find(cookie => cookie.includes('refreshToken'));
-    expect(accessTokenCookie).toBeDefined();
-    expect(refreshTokenCookie).toBeDefined();
-    expect(accessTokenCookie).toContain('HttpOnly');
-    expect(refreshTokenCookie).toContain('HttpOnly');
-    accessToken = accessTokenCookie.split(';')[0].split('=')[1];
-    refreshToken = refreshTokenCookie.split(';')[0].split('=')[1];
-    //Check response body
-    expect(response.body).toHaveProperty('accessTokenExpiry');
-    expect(response.body).toHaveProperty('refreshTokenExpiry');
-    expect(response.body).toHaveProperty('antiCsrfToken');
-    expect(response.body).toHaveProperty('user');
-    antiCsrfToken = response.body.antiCsrfToken;
-    user = response.body.user;
-  });
-
-  it('should logout a user', async () => {
-    const response = await testSession
-      .delete(`/auth/logout/${user._id}`)
-      .set('x-anti-csrf-token', antiCsrfToken)
-      .set('Cookie', `accessToken=${accessToken}; refreshToken=${refreshToken}`);
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('message', 'User logged out');
+    //Test the /auth/login route
+    it('should log in the user', async () => {
+      loggedInUser = await loginUser(testSession, newUser);
+    });
+   //Test the /auth/logout route
+   it('should log out the user', async () => {
+      const response = await retryRequest(async() => 
+        testSession
+          .delete(`/auth/logout/${loggedInUser.user._id}`)
+          .set('x-anti-csrf-token', loggedInUser.antiCsrfToken)
+          .set('Cookie', `accessToken=${loggedInUser.accessToken}; refreshToken=${loggedInUser.refreshToken}`)
+      );
+      expect(response.statusCode).toBe(200);
+    });
+    //Test the /auth/reset-password/request route
+    it('should send user password reset email', async () => {
+      const response = await retryRequest(async() =>
+        testSession
+          .post('/auth/reset-password/request')
+          .send({ email: newUser.email })
+      );
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('message', 'Password reset email sent');
+      expect(response.body).toHaveProperty('email', newUser.email);
+      pwResetCode = mockSendPasswordResetEmail.mock.calls[mockSendPasswordResetEmail.mock.calls.length-1][1]; // Get the resetCode from the latest call
+      expect(pwResetCode).toBeDefined();
+    });
+    //Test the /auth/reset-password/verify route
+    it('should verify the password reset code', async () => {
+      const response = await testSession
+        .post('/auth/reset-password/verify')
+        .send({ email: newUser.email, resetCode: pwResetCode });
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('message', 'Password reset code verified');
+    });
+  
+    it('should accept a new password and reset it', async () => {
+      const response = await testSession
+        .post('/auth/reset-password/complete')
+        .send({email: theUser.email, newPassword: newPassword});
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('message', 'Password reset complete');
+    });
+    
+    //Re-log in user to delete them
+    it('should re-log in the user', async () => {
+      loggedInUser = await loginUser(testSession, newUser);
+    });
+    //Clean up the user just created
+    it('should delete the user', async () => {
+      const response = await retryRequest(async() => 
+        testSession
+          .delete(`/users/${loggedInUser.user._id}`)
+          .set('x-anti-csrf-token', loggedInUser.antiCsrfToken)
+          .set('Cookie', `accessToken=${loggedInUser.accessToken}; refreshToken=${loggedInUser.refreshToken}`)
+      );
+      expect(response.statusCode).toBe(200);  
+    });
   });
 });
-

@@ -18,7 +18,6 @@ export const configureSession = (req, res, next) => {
   res.cookie('refreshToken', refreshToken, {...cookieOptions, maxAge: 604800000 });
   req.session.user = req.user;
   req.session.antiCsrfToken = antiCsrfToken;
-  //console.log("In configureSession. req.session:", JSON.stringify(req.session));
   res.status(200).json({
     user: req.user,
     accessTokenExpiry, refreshTokenExpiry,

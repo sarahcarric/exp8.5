@@ -36,5 +36,19 @@ export default {
     delete userObject.accountInfo.password;
     delete userObject.__v;
     return userObject;
+  },
+
+ /***********************************************************************
+   * deleteUser
+   * @descr Delete a user by ID.
+   * @param {string} userId - The ID of the user to retrieve.
+   * @returns {Promise<Object>} The user object.
+  *************************************************************************/
+  deleteUser: async (userId) => {
+    const user = await User.findByIdAndDelete(userId).lean();
+    const userObject = {...user};
+    delete userObject.accountInfo.password;
+    delete userObject.__v;
+    return userObject;
   }
 }

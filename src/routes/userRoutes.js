@@ -28,6 +28,12 @@ userRouter.get('/users/:userId', authenticate, csrfProtection, authorize, userCo
 
 //userRouter.put('/users/:userId', userController.updateUser);
 
-//userRouter.delete(/users/:userId, userController.deleteUser);
+/***********************************************************************
+ * @route DELETE /users/:userId
+ * @desc Delete a user by ID.
+ * @access Private -- only admin or the user themselves can delete
+ * @returns {Object} - The user object.
+ * *********************************************************************/
+userRouter.delete('/users/:userId', authenticate, csrfProtection, authorize, userController.deleteUser);
 
 export default userRouter;

@@ -122,6 +122,7 @@ export const verifyUserEmail = async (req, res, next) => {
     redirectUrl += '/emailverified';
     return res.redirect(redirectUrl);
   } catch (err) {
+    console.log('Error verifying user email:', err);
     redirectUrl += '/emailvalidationerror';
     if (err.name === 'JsonWebTokenError') {
       redirectUrl += '?reason=invalidtoken';
@@ -150,7 +151,7 @@ export const verifyUserEmail = async (req, res, next) => {
 export const resendVerificationEmail = async (req, res, next) => {
   try {
     await authService.resendVerificationEmail(req.body.email);
-    res.status(200).json({message: 'Verification email sent', email: req.body.email});
+    res.status(200).json({message: 'Verification email re-sent', email: req.body.email});
   } catch (err) {
     next(err);
   } 

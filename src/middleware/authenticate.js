@@ -15,7 +15,6 @@ import { InvalidAccessTokenError } from '../utils/errors.js';
  * @param {Function} next - The next middleware function.
  ************************************************************************/
 export const authenticate = (req, res, next) => {
-  //console.log("In authenticate. req.session:", JSON.stringify(req.session));
   const accessToken = req.cookies.accessToken;
 
   if (!accessToken) {

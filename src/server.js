@@ -16,7 +16,6 @@ import roundRouter from './routes/roundRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 import rateLimiter from './middleware/rateLimiter.js';
-//import includeSessionInResponse from './middleware/includeSessionInResponse.js';
 
 dotenv.config();
 
@@ -58,8 +57,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(passport.initialize());
-
-//process.env.NODE_ENV === 'test' && app.use(includeSessionInResponse);
 
 //Install app routes
 app.use(userRouter);

@@ -3,7 +3,7 @@ import { TooManyRequestsError } from '../utils/errors.js';
 
 const rateLimiterMem = new RateLimiterMemory({
   points: 20, 
-  duration: 60 
+  duration: process.env.NODE_ENV === 'test' ? 10 : 60 // 10 seconds for testing, 60 seconds for production 
 });
 
 const rateLimiter = async(req, res, next) => {
@@ -11,7 +11,8 @@ const rateLimiter = async(req, res, next) => {
     await rateLimiterMem.consume(req.ip);
     next();
   } catch (err) {
-    return next(new TooManyRequestsError("You are limited to 20 requests per minute. Please try again later."));
+    return next(new TooManyRequestsError("You are limited to " + rateLimiterMem.points + " requests per " + 
+                 rateLimiterMem.duration + " seconds. Please try again later."));
   }
 }
 

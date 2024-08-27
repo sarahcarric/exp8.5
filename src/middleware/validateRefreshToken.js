@@ -22,7 +22,6 @@ export const validateRefreshToken = (req, res, next) => {
   }
 
   try {
-    // Verify the access token
     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
     req.user = decoded;
     return next();

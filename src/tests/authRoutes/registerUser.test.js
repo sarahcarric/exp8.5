@@ -1,101 +1,87 @@
-import request from 'supertest';
+/***************************************************************************************
+ * @file: registerUser.test.js
+ * @desc: Test the /auth/register and /auth/login and /auth/verify-email routes. 
+ *        We use /auth/login to verify that a user's account is activated.
+ *        We use /users/:userId to delete the user we created.
+ **************************************************************************************/
+
+// Import the necessary modules and services
+import session from 'supertest-session';
 import {app, server} from '../../server.js'; // Ensure your server exports the Express app
 import * as emailService from '../../services/emailService';
+import { generateRandomEmail, generateValidPassword, registerAndVerifyUser, loginUser } from '../../utils/testUtils.js';
 import mongoose from 'mongoose';
 
-const newUser = { email: 'userfuasdfaslcdasfvc@gmail.com', password: 'ValidPassword1' };
+// Declare the variables we'll use in the tests
+const newUser = { email: generateRandomEmail(), password: generateValidPassword() };
+let testSession;
+let loggedInUser;   
+let mockSendVerificationEmail;
 
-describe('Register User Route', () => {
-  let mockSendVerificationEmail;
+// Describe the test suite
+describe('Test routes to register new users and verify their email addresses', () => {
 
+  // Before all tests, create a test session and spy on the sendVerificationEmail function
   beforeAll(() => {
-      mockSendVerificationEmail = jest.spyOn(emailService, 'sendVerificationEmail');
+    testSession = session(app);
+    mockSendVerificationEmail = jest.spyOn(emailService, 'sendVerificationEmail');
+    mockSendVerificationEmail.mockImplementation((email, verificationToken) => null);
   });
  
+  // After each test, clear all timers
   afterEach(() => {
     jest.clearAllTimers(); // Clear all timers after each test
   });
 
+  // After all tests, clear all mocks and close the server and database connection
   afterAll(async() => {
     jest.clearAllMocks(); // Clear all mocks after all tests
     await mongoose.connection.close();
     await new Promise(resolve => server.close(resolve));
   });
 
-  /*************************************************************************
-   * @test POST /auth/register
-   * @desc Test route to register a new user. 
-   *(***********************************************************************/
-  it('should register a new user', async () => {
-    const response = await request(app)
-      .post('/auth/register')
-      .send(newUser)
-      .set('Accept', 'application/json');
-    expect(response.statusCode).toBe(201);
-    //expect(mockSendVerificationEmail).toHaveBeenCalled();
-
-    const expectedResponse = {
-      accountInfo: {
-        email: newUser.email,
-        emailVerified: false,
-        verificationDueBy: expect.any(String), // Ensure this is a valid date
-        passResetToken: null,
-        passResetVerfiedToken: null,
-        mfaSecret: null,
-        mfaVerified: false,
-        mfaAttempts: 0,
-        mfaStartTime: null, 
-        oauthProvider: 'none',
-        role: 'user'
-      },
-      identityInfo: {
-        displayName: '',
-        profilePic: 'images/DefaultProfilePic.jpg'
-      },
-      speedgolfInfo: {
-        personalBest: {
-          strokes: 100,
-          seconds: 5400,
-          course: ''
-        },
-        clubs: {
-          '1W': false,
-          '3W': false,
-          '4W': false,
-          '5W': false,
-          'Hybrid': false,
-          '1I': false,
-          '2I': false,
-          '3I': false,
-          '4I': false,
-          '5I': false,
-          '6I': false,
-          '7I': false,
-          '8I': false,
-          '9I': false,
-          'PW': false,
-          'GW': false,
-          'SW': false,
-          'LW': false,
-          'Putter': false
-        },
-        bio: '',
-        homeCourse: '',
-        clubComments: '',
-        firstRound: expect.any(String) // Ensure this is a valid date
-      },
-      _id: expect.any(String),
-      rounds: []
-    };
-    expect(response.body).toMatchObject(expectedResponse);
+  // Test the /auth/register route with a valid, random email and password
+   it('should register and verify a new user', async () => {
+    await registerAndVerifyUser(testSession, newUser, mockSendVerificationEmail);
   });
 
-  it('should verify account by simulating click on email link', async () => {
-    const vToken = mockSendVerificationEmail.mock.calls[0][1];
-    expect(vToken).toBeDefined();
-    const verificationUrl = `${process.env.API_DEPLOYMENT_URL}/auth/verify-email/${vToken}`;
-    const response = await fetch(verificationUrl, { method: 'GET', redirect: 'manual' });
-    expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe(process.env.CLIENT_DEPLOYMENT_URL + '/emailverified');
+  // Test the /auth/register route with an existing email
+  it('should not register a user with an existing email', async () => {
+    const response = await testSession
+      .post('/auth/register')
+      .send(newUser)
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty('error', 'A user with that email already exists');
+  });
+
+  // Test the /auth/register route with an invalid email
+  it('should not register a user with an invalid email', async () => {
+    const response = await testSession
+      .post('/auth/register')
+      .send({ email: 'invalidEmail', password: generateValidPassword() })
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0]).toBe('is not a valid email address');
+  });
+
+  it('should not register a user with an invalid password', async () => {
+    const response = await testSession
+      .post('/auth/register')
+      .send({ email: generateRandomEmail(), password: 'invalidPassword' })
+      .set('Accept', 'application/json');
+    expect(response.statusCode).toBe(400);
+    expect(response.body.errors[0]).toBe('must be at least 8 characters long and contain at least one number and one uppercase letter');
+  });
+     
+  //Verify that the user's account has been activated by logging in
+  it('should ensure that the account has been verified by logging in', async () => {
+    loggedInUser = await loginUser(testSession, newUser);
+  });
+
+  it ('should delete the user we created', async () => {
+    const response = await testSession
+      .delete(`/users/${loggedInUser.user._id}`)
+      .set('x-anti-csrf-token', loggedInUser.antiCsrfToken)
+      .set('Cookie', `accessToken=${loggedInUser.accessToken}; refreshToken=${loggedInUser.refreshToken}`);
+    expect(response.statusCode).toBe(200);
   });
 })
