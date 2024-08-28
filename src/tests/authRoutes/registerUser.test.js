@@ -9,14 +9,21 @@
 import session from 'supertest-session';
 import {app, server} from '../../server.js'; // Ensure your server exports the Express app
 import * as emailService from '../../services/emailService';
-import { generateRandomEmail, generateValidPassword, registerAndVerifyUser, loginUser } from '../../utils/testUtils.js';
+import { generateRandomEmail, generateValidPassword, 
+        registerUser, verifyAccountEmail, loginUser, 
+        requestResendVerificationEmail, retryRequest} from '../../utils/testUtils.js';
 import mongoose from 'mongoose';
 
-// Declare the variables we'll use in the tests
-const newUser = { email: generateRandomEmail(), password: generateValidPassword() };
-let testSession;
-let loggedInUser;   
-let mockSendVerificationEmail;
+//Array of users to test
+const newUsers = Array(1).fill(null).map(() => ({
+  email: generateRandomEmail(),
+  password: generateValidPassword()
+}));
+
+//Variables used in tests
+let testSession, loggedInUser, mockSendVerificationEmail; 
+const invalidEmail = 'invalidEmail';
+const invalidPassword = 'invalidpassword';
 
 // Describe the test suite
 describe('Test routes to register new users and verify their email addresses', () => {
@@ -40,48 +47,77 @@ describe('Test routes to register new users and verify their email addresses', (
     await new Promise(resolve => server.close(resolve));
   });
 
-  // Test the /auth/register route with a valid, random email and password
-   it('should register and verify a new user', async () => {
-    await registerAndVerifyUser(testSession, newUser, mockSendVerificationEmail);
-  });
+  newUsers.forEach((newUser) => {
+    //Test the /auth/register route with a invalid email and password
+    it('should not register a new user with invalid email and password', async () => {
+      await registerUser(testSession, { email: invalidEmail, password: invalidPassword }, false);
+    });
 
-  // Test the /auth/register route with an existing email
-  it('should not register a user with an existing email', async () => {
-    const response = await testSession
-      .post('/auth/register')
-      .send(newUser)
-    expect(response.statusCode).toBe(400);
-    expect(response.body).toHaveProperty('error', 'A user with that email already exists');
-  });
+    //Test the /auth/register route with a valid email and password
+    it('should register a new user', async () => {
+      await registerUser(testSession, newUser);
+    });
 
-  // Test the /auth/register route with an invalid email
-  it('should not register a user with an invalid email', async () => {
-    const response = await testSession
-      .post('/auth/register')
-      .send({ email: 'invalidEmail', password: generateValidPassword() })
-    expect(response.statusCode).toBe(400);
-    expect(response.body.errors[0]).toBe('is not a valid email address');
-  });
+    //Test the /auth/resend-verification-email route with an invalid email
+    it('should not re-send verification email to invalid email', async () => {
+      await requestResendVerificationEmail(testSession, invalidEmail, false);
+    });
 
-  it('should not register a user with an invalid password', async () => {
-    const response = await testSession
-      .post('/auth/register')
-      .send({ email: generateRandomEmail(), password: 'invalidPassword' })
-      .set('Accept', 'application/json');
-    expect(response.statusCode).toBe(400);
-    expect(response.body.errors[0]).toBe('must be at least 8 characters long and contain at least one number and one uppercase letter');
-  });
-     
-  //Verify that the user's account has been activated by logging in
-  it('should ensure that the account has been verified by logging in', async () => {
-    loggedInUser = await loginUser(testSession, newUser);
-  });
+    //Test the /auth/resend-verification-email route with a valid, registered email
+    it('should re-send verification email to valid, registered user', async () => {
+      await requestResendVerificationEmail(testSession, newUser.email);
+    });
 
-  it ('should delete the user we created', async () => {
-    const response = await testSession
-      .delete(`/users/${loggedInUser.user._id}`)
-      .set('x-anti-csrf-token', loggedInUser.antiCsrfToken)
-      .set('Cookie', `accessToken=${loggedInUser.accessToken}; refreshToken=${loggedInUser.refreshToken}`);
-    expect(response.statusCode).toBe(200);
+    //Test the /auth/verify-email route with invalid token
+    it('should verify user email', async () => {
+      await verifyAccountEmail(mockSendVerificationEmail, false);
+    });
+
+    //Test the /auth/verify-email route with valid token
+    it('should verify user email', async () => {
+      await verifyAccountEmail(mockSendVerificationEmail);
+    });
+
+    // Test the /auth/register route with an existing email
+    it('should not register a user with an existing email', async () => {
+      const response = await retryRequest(async() => 
+        testSession
+          .post('/auth/register')
+          .send(newUser)
+      );
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toHaveProperty('error', 'A user with that email already exists');
+    });
+
+    // Test the /auth/register route with an invalid email
+    it('should not register a user with an invalid email', async () => {
+      const response = await testSession
+        .post('/auth/register')
+        .send({ email: 'invalidEmail', password: generateValidPassword() })
+      expect(response.statusCode).toBe(400);
+      expect(response.body.errors[0]).toBe('is not a valid email address');
+    });
+
+    it('should not register a user with an invalid password', async () => {
+      const response = await testSession
+        .post('/auth/register')
+        .send({ email: generateRandomEmail(), password: 'invalidPassword' })
+        .set('Accept', 'application/json');
+      expect(response.statusCode).toBe(400);
+      expect(response.body.errors[0]).toBe('must be at least 8 characters long and contain at least one number and one uppercase letter');
+    });
+      
+    //Verify that the user's account has been activated by logging in
+    it('should ensure that the account has been verified by logging in', async () => {
+      loggedInUser = await loginUser(testSession, newUser);
+    });
+    //Delete the user we created, so we leave no trace
+    it ('should delete the user we created', async () => {
+      const response = await testSession
+        .delete(`/users/${loggedInUser.user._id}`)
+        .set('x-anti-csrf-token', loggedInUser.antiCsrfToken)
+        .set('Cookie', `accessToken=${loggedInUser.accessToken}; refreshToken=${loggedInUser.refreshToken}`);
+      expect(response.statusCode).toBe(200);
+    });
   });
 })

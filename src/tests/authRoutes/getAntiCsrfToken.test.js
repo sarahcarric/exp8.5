@@ -16,7 +16,7 @@ let testSession;
 let loggedInUser;   
 let mockSendVerificationEmail;
 
-describe('Auth Routes', () => {
+describe('Test Anti-CSRF Token GET Route', () => {
 
   beforeAll(async () => {
     testSession = session(app);

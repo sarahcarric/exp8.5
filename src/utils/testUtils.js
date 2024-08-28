@@ -12,7 +12,7 @@
  * @param {number} delay - The delay in milliseconds between retries.
  * @returns {Promise} - The response from the function.
  * ***********************************************************************/
-export async function retryRequest(fn, retries = 3, delay = 5000) {
+export async function retryRequest(fn, retries = 6, delay = 15000) {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fn();
@@ -123,12 +123,12 @@ export function generateCustomPassword(len = 5, numUpper = 0, numNumber = 0, num
  * @param {Object} testSession - The supertest session object.
  * @param {Object} newUser - The new user object consisting of email and
  *                 password props.
- * @param {Function} mockSendVerificationEmail - The mock function to send
- * the verification email.
+ * @param validUser - A flag indicating whether the user is valid. If
+ *                   false, we will expect the registration to fail
  * @returns {Object} - The user object if status = 201, or the response
- * object if status = 429.
+ * object if status is another value.
  * ***********************************************************************/
-export async function registerUser(testSession, newUser) {
+export async function registerUser(testSession, newUser, validUser = true) {
   // Register the new user
   const registerResponse = await retryRequest(() => 
     testSession
@@ -136,7 +136,19 @@ export async function registerUser(testSession, newUser) {
       .send(newUser)
       .set('Accept', 'application/json')
   );
-  expect(registerResponse.statusCode).toBe(201);
+  if (validUser) {
+    expect(registerResponse.statusCode).toBe(201);
+  } else {
+    expect(registerResponse.statusCode).toBe(400);
+    expect(registerResponse.body).toEqual({
+      errors: [
+        "is not a valid email address",
+        "must be at least 8 characters long and contain at least one number and one uppercase letter"
+      ]
+    });
+    return registerResponse;
+  }
+  // Check response body
   const expectedResponse = {
     accountInfo: {
       email: newUser.email,
@@ -202,7 +214,7 @@ export async function registerUser(testSession, newUser) {
  *        verification email should be re-sent.
  * @returns Nothing
  * ***********************************************************************/
-export async function requestResendVerificationEmail(testSession, email) {
+export async function requestResendVerificationEmail(testSession, email, validEmail = true) {
   // Request that the verification email be resent
   const resendResponse = await retryRequest(() =>
     testSession
@@ -210,7 +222,12 @@ export async function requestResendVerificationEmail(testSession, email) {
       .send({ email })
       .set('Accept', 'application/json')
   );
-  expect(resendResponse.statusCode).toBe(200);
+  if (validEmail) {
+    expect(resendResponse.statusCode).toBe(200);
+  } else {
+    expect(resendResponse.statusCode).toBe(404); //Not found
+    expect(resendResponse.body).toHaveProperty('error', 'User with email ' + email + ' not found');
+  }
 }
 
 /*************************************************************************
@@ -221,16 +238,30 @@ export async function requestResendVerificationEmail(testSession, email) {
  *        mock function the token that was sent in its most recent 
  *        invocation, so that we can call the /auth/verify-email route
  *        with the correct token to verify the email address. 
+ * @param {boolean} validToken - A flag indicating whether the token is
+ *        valid. If false, we will call the /auth/verify-email route with
+ *        an invalid token to test the error handling.
  * @returns Nothing
  * ***********************************************************************/
-export async function verifyAccountEmail(mockSendVerificationEmail) {
+export async function verifyAccountEmail(mockSendVerificationEmail, validToken = true) {
   // Verify the account by simulating click on email link
   const vToken = mockSendVerificationEmail.mock.calls[mockSendVerificationEmail.mock.calls.length - 1][1];
   expect(vToken).toBeDefined();
-  const verificationUrl = `${process.env.API_DEPLOYMENT_URL}/auth/verify-email/${vToken}`;
+  let verificationUrl;
+  if (validToken) {
+    verificationUrl = `${process.env.API_DEPLOYMENT_URL}/auth/verify-email/${vToken}`;
+  } else {
+    verificationUrl = `${process.env.API_DEPLOYMENT_URL}/auth/verify-email/invalidToken`;
+  }
   const verifyResponse = await fetch(verificationUrl, { method: 'GET', redirect: 'manual' });
   expect(verifyResponse.status).toBe(302);
-  expect(verifyResponse.headers.get('location')).toBe(process.env.CLIENT_DEPLOYMENT_URL + '/emailverified');
+  if (validToken) {
+    expect(verifyResponse.headers.get('location')).toBe(
+      process.env.CLIENT_DEPLOYMENT_URL + '/emailverified');
+  } else {
+    expect(verifyResponse.headers.get('location')).toBe(
+      process.env.CLIENT_DEPLOYMENT_URL + '/emailvalidationerror?reason=invalidtoken');
+  }
 }
 
 /*************************************************************************

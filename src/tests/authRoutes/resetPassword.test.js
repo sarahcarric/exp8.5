@@ -6,7 +6,7 @@ import {generateRandomEmail, generateValidPassword, registerUser,
         retryRequest} from '../../utils/testUtils.js';
 import mongoose from 'mongoose';
 
-const newUsers = Array(4).fill(null).map(() => ({
+const newUsers = Array(1).fill(null).map(() => ({
   email: generateRandomEmail(),
   password: generateValidPassword()
 }));
@@ -14,10 +14,12 @@ const newUsers = Array(4).fill(null).map(() => ({
 const newPasswordValid = generateValidPassword();
 const newPasswordInvalid = '123'; // Invalid password
 const pwResetCodeInvalid = '12345';
+const nonexistentEmail = 'foo@gmail.com';
+const invalidEmail = 'foo'; 
 
 let testSession, loggedInUser, mockSendVerificationEmail, mockSendPasswordResetEmail, pwResetCode
 
-describe('Auth Routes', () => {
+describe('Test reset password routes', () => {
 
   beforeAll(async () => {
     testSession = session(app);
@@ -62,7 +64,30 @@ describe('Auth Routes', () => {
       );
       expect(response.statusCode).toBe(200);
     });
-    //Test the /auth/reset-password/request route
+
+    //Test the /auth/login route with a valid but non-existent email
+    it('should not send user password reset email because email not in the database', async () => {
+      const response = await retryRequest(async() =>
+        testSession
+          .post('/auth/reset-password/request')
+          .send({ email: nonexistentEmail })
+      );
+      expect(response.statusCode).toBe(404);
+      expect(response.body).toHaveProperty('error', 'User with email ' + nonexistentEmail + ' not found');
+    });
+
+    //Test the /auth/login route with an invalid email
+    it('should not send user password reset email due to invalid email address', async () => {
+      const response = await retryRequest(async() =>
+        testSession
+          .post('/auth/reset-password/request')
+          .send({ email: invalidEmail })
+      );
+      expect(response.statusCode).toBe(404);
+      expect(response.body).toHaveProperty('error', 'User with email ' + invalidEmail + ' not found');
+    });
+
+    //Test the /auth/reset-password/request route with existing email
     it('should send user password reset email', async () => {
       const response = await retryRequest(async() =>
         testSession
@@ -75,27 +100,53 @@ describe('Auth Routes', () => {
       pwResetCode = mockSendPasswordResetEmail.mock.calls[mockSendPasswordResetEmail.mock.calls.length-1][1]; // Get the resetCode from the latest call
       expect(pwResetCode).toBeDefined();
     });
+    //Test the /auth/reset-password/verify route with an invalid reset code
+    it('should not verify the password reset code', async () => {
+      const response = await retryRequest(async() =>
+        testSession
+          .post('/auth/reset-password/verify')
+          .send({ email: newUser.email, resetCode: pwResetCodeInvalid })
+      );
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toHaveProperty('error', 'Invalid reset code');
+    });
+
     //Test the /auth/reset-password/verify route
     it('should verify the password reset code', async () => {
-      const response = await testSession
-        .post('/auth/reset-password/verify')
-        .send({ email: newUser.email, resetCode: pwResetCode });
+      const response = await retryRequest(async() =>
+        testSession
+          .post('/auth/reset-password/verify')
+          .send({ email: newUser.email, resetCode: pwResetCode })
+      );
       expect(response.statusCode).toBe(200);
       expect(response.body).toHaveProperty('message', 'Password reset code verified');
     });
   
-    it('should accept a new password and reset it', async () => {
-      const response = await testSession
-        .post('/auth/reset-password/complete')
-        .send({email: theUser.email, newPassword: newPassword});
+    it('should not reset pasword due to invalid password', async () => {
+      const response = await retryRequest(async() =>
+        testSession
+          .post('/auth/reset-password/complete')
+          .send({email: newUser.email, newPassword: newPasswordInvalid})
+      );
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error', 'Invalid password');
+    });
+
+    it('should accept a valid password and reset it', async () => {
+      const response = await retryRequest(async() =>
+        testSession
+          .post('/auth/reset-password/complete')
+          .send({email: newUser.email, newPassword: newPasswordValid})
+      );
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message', 'Password reset complete');
     });
     
     //Re-log in user to delete them
     it('should re-log in the user', async () => {
-      loggedInUser = await loginUser(testSession, newUser);
+      loggedInUser = await loginUser(testSession, {email: newUser.email, password: newPasswordValid});
     });
+
     //Clean up the user just created
     it('should delete the user', async () => {
       const response = await retryRequest(async() => 

@@ -122,7 +122,6 @@ export const verifyUserEmail = async (req, res, next) => {
     redirectUrl += '/emailverified';
     return res.redirect(redirectUrl);
   } catch (err) {
-    console.log('Error verifying user email:', err);
     redirectUrl += '/emailvalidationerror';
     if (err.name === 'JsonWebTokenError') {
       redirectUrl += '?reason=invalidtoken';
@@ -136,7 +135,6 @@ export const verifyUserEmail = async (req, res, next) => {
         redirectUrl += `&email=${encodeURIComponent(decodedToken.email)}`;
       } 
     }
-    console.error('Error verifying user email:', err);
     return res.redirect(redirectUrl);
   }
 }

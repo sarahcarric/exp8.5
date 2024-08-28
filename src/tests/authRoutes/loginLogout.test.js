@@ -6,17 +6,15 @@ import {generateRandomEmail, generateValidPassword, registerUser,
         retryRequest} from '../../utils/testUtils.js';
 import mongoose from 'mongoose';
 
-//Note: If we test with 4 users instead of 4, we get a rate limit error (429), as we should.
+//Array of users to test
 const newUsers = Array(4).fill(null).map(() => ({
   email: generateRandomEmail(),
   password: generateValidPassword()
 }));
 
-let testSession;
-let loggedInUser;   
-let mockSendVerificationEmail;
+let testSession, loggedInUser, mockSendVerificationEmail;
 
-describe('Auth Routes', () => {
+describe('Test Log in and log out routes', () => {
 
   beforeAll(async () => {
     testSession = session(app);
@@ -41,18 +39,17 @@ describe('Auth Routes', () => {
     it('should register a new user', async () => {
       await registerUser(testSession, newUser);
     });
-    //Test the /auth/resend-verification-email route
-    it('should request verification email to be re-sent', async () => {
-      await requestResendVerificationEmail(testSession, newUser.email);
-    });
+    
     //Test the /auth/verify-email route
     it('should verify user email', async () => {
       await verifyAccountEmail(mockSendVerificationEmail);
     });
+
     //Test the /auth/login route
     it('should log in the user', async () => {
       loggedInUser = await loginUser(testSession, newUser);
     });
+
    //Test the /auth/logout route
    it('should log out the user', async () => {
       const response = await retryRequest(async() => 
@@ -63,10 +60,12 @@ describe('Auth Routes', () => {
       );
       expect(response.statusCode).toBe(200);
     });
+
     //Re-log in user to delete them
     it('should re-log in the user', async () => {
       loggedInUser = await loginUser(testSession, newUser);
     });
+    
     //Clean up the user just created
     it('should delete the user', async () => {
       const response = await retryRequest(async() => 
