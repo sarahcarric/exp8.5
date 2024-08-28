@@ -23,7 +23,18 @@ passport.use(new GithubStrategy({
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
   callbackURL: 'http://localhost:4000/auth/github/callback'
 }, async (accessToken, refreshToken, profile, done) => {
-  try {
+    // Check if profile has a _json field (which happens in our test environ)
+    // and overwrite profile if it does
+    if (profile._json) {
+      profile = {
+        id: profile._json.id,
+        username: profile._json.login,
+        emails: profile._json.emails,
+        displayName: profile._json.displayName,
+        photos: profile._json.photos
+      };
+    }
+    try {
     // Find or create user in your database
     let user = await User.findOne({'accountInfo.email': profile.emails[0].value });
     if (user) {

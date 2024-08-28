@@ -296,13 +296,14 @@ export const githubCallback = (req, res, next) => {
   }
   passport.authenticate('github', (err, user) => {
     if (err) {
+      console.error("Error during passport authentication: ", err);
       return next(err);
     }
     if (!user) {
+      console.error("No user found during passport authentication");
       return next(new UserNotFoundError('Login failed. No user found'));
     }
     req.user = user;
     next();
-    //res.status(200).send(`User logged in successfully: ${req.user.accountInfo.email}`);
   })(req, res, next);
 };
