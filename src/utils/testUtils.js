@@ -2,6 +2,9 @@
  * @file: testUtils.js
  * @desc: Contains utility functions to support API route testing.
  * **********************************************************************/
+import nock from 'nock';
+import cookieParser from 'cookie-parser';
+import User from '../models/User.js';
 
 /*************************************************************************
  * retryRequest
@@ -300,3 +303,68 @@ export async function loginUser(testSession, theUser) {
   const user = response.body.user;
   return { user, accessToken, refreshToken, antiCsrfToken };
 }
+
+/*************************************************************************
+ * registerUserViaGitHubOAuth
+ * @descr Register a new user via the GitHub OAuth flow. This function
+ *       mocks the GitHub OAuth server and simulates the callback from
+ *      GitHub with both code and state query params, and the OAuth
+ *     token from the cookies. It then checks the response status code
+ *   and body, and verifies that the user was created in the database.
+ * @param {Object} testSession - The supertest session object.
+ * @param {string} email - The email address of the user to register.
+ *************************************************************************/
+export async function registerUserViaGitHubOAuth (testSession, email) {
+  let parsedCookies;
+
+  // Step 1 Set up mocks for GitHub OAuth server
+  nock('https://github.com')
+    .post('/login/oauth/access_token')
+    .reply(200, {
+      access_token: 'mocked_access_token',
+      token_type: 'bearer',
+    });
+
+  nock('https://api.github.com')
+    .get('/user')
+    .reply(200, {
+      id: '123',
+      login: 'mocked_user',
+      emails: [{ value: email }], // Use the provided email
+      displayName: generateCustomPassword(),
+      photos: [{ value: 'http://example.com/profile.jpg' }]
+    });
+
+  // Step 2: Initiate the OAuth flow
+  const authRes = await testSession.get('/auth/github');
+  const cookies = authRes.headers['set-cookie'];
+
+  // Create a mock request object
+  const req = {
+    headers: {
+      cookie: cookies.join('; ')
+    }
+  };
+
+  // parse the cookies
+  cookieParser()(req, {}, () => {
+    parsedCookies = req.cookies;
+  });
+
+  // Step 3: Simulate the callback from GitHub with both code and state query params,
+  // and the OAuth token from the cookies
+  const response = await testSession
+    .get(`/auth/github/callback?code=mocked_code&state=${parsedCookies.oauthToken}`)
+    .set('Cookie', cookies.map(cookie => cookie.split(';')[0]).join('; ')); // Join cookie values with a semicolon
+
+  //Step 4: Check the response
+  expect(response.status).toBe(200);
+  expect(response.body).toHaveProperty('user');
+  expect(response.body).toHaveProperty('accessTokenExpiry');
+  expect(response.body).toHaveProperty('refreshTokenExpiry');
+  expect(response.body).toHaveProperty('antiCsrfToken');
+  const user = await User.findOne({ 'accountInfo.email': response.body.user.accountInfo.email });
+  expect(user.accountInfo.password).toBeNull();
+  expect(user.accountInfo.oauthProvider).toBe('github');
+  expect(user.accountInfo.emailVerified).toBe(true);
+};
