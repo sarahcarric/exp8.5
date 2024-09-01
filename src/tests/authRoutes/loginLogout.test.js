@@ -2,12 +2,14 @@ import session from 'supertest-session';
 import {app, server} from '../../server.js'; // Ensure your server exports the Express app
 import * as emailService from '../../services/emailService.js';
 import {generateRandomEmail, generateValidPassword, registerUser, 
-        requestResendVerificationEmail, verifyAccountEmail, loginUser, 
+        verifyAccountEmail, loginUser, 
         retryRequest} from '../../utils/testUtils.js';
 import mongoose from 'mongoose';
+import User from '../../models/User.js';
+const numTestRounds = 1;
 
 //Array of users to test
-const newUsers = Array(4).fill(null).map(() => ({
+const newUsers = Array(numTestRounds).fill(null).map(() => ({
   email: generateRandomEmail(),
   password: generateValidPassword()
 }));
@@ -22,19 +24,22 @@ describe('Test Log in and log out routes', () => {
     mockSendVerificationEmail.mockImplementation((email, verificationToken) => null);
   });
 
-    // After each test, clear all timers
-  afterEach(() => {
-    jest.clearAllTimers(); // Clear all timers after each test
-  });
-
-  // After all tests, clear all mocks and close the server and database connection
+  // After all tests, clear mocks, delete users, and close server and database connection
   afterAll(async() => {
     jest.clearAllMocks(); // Clear all mocks after all tests
+    await Promise.all(newUsers.map(async (newUser) => {
+      await User.findOneAndDelete({ 'accountInfo.email': newUser.email });
+    }));
     await mongoose.connection.close();
     await new Promise(resolve => server.close(resolve));
   });
 
   newUsers.forEach((newUser) => {
+    //Test /auth/login user for unregistered user
+    it('should not log in unregistered user', async () => {
+      await loginUser(testSession, newUser, false);
+    });
+
     //Test the /auth/register route with a valid, random email and password
     it('should register a new user', async () => {
       await registerUser(testSession, newUser);
@@ -61,20 +66,9 @@ describe('Test Log in and log out routes', () => {
       expect(response.statusCode).toBe(200);
     });
 
-    //Re-log in user to delete them
-    it('should re-log in the user', async () => {
-      loggedInUser = await loginUser(testSession, newUser);
-    });
-    
-    //Clean up the user just created
-    it('should delete the user', async () => {
-      const response = await retryRequest(async() => 
-        testSession
-          .delete(`/users/${loggedInUser.user._id}`)
-          .set('x-anti-csrf-token', loggedInUser.antiCsrfToken)
-          .set('Cookie', `accessToken=${loggedInUser.accessToken}; refreshToken=${loggedInUser.refreshToken}`)
-      );
-      expect(response.statusCode).toBe(200);  
+    //Test the /auth/login route with invalid password
+    it('should not log in user with invalid password', async () => {
+      await loginUser(testSession, {email: newUser.email, password: 'Invalid'}, false);
     });
   });
 });

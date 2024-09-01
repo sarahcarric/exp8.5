@@ -14,7 +14,7 @@ dotenv.config();
  * @desc Configure the Github OAuth strategy.
  * @param {Object} accessToken - The access token returned by Github.
  * @param {Object} refreshToken - The refresh token returned by Github.
- * @param {Object} profile - The user's Github profile.
+ * @param {Object} profile - The user's Github profile.Carriage Hills Dr, Granger, IN
  * @param {Function} done - The callback function.
  * @returns {Function} - Calls the done function.
  * **********************************************************************/

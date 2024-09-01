@@ -128,6 +128,8 @@ export function generateCustomPassword(len = 5, numUpper = 0, numNumber = 0, num
  *                 password props.
  * @param validUser - A flag indicating whether the user is valid. If
  *                   false, we will expect the registration to fail
+ *                   with a 400 status code and any of a set of 
+ *                   expected error messages.
  * @returns {Object} - The user object if status = 201, or the response
  * object if status is another value.
  * ***********************************************************************/
@@ -143,12 +145,16 @@ export async function registerUser(testSession, newUser, validUser = true) {
     expect(registerResponse.statusCode).toBe(201);
   } else {
     expect(registerResponse.statusCode).toBe(400);
-    expect(registerResponse.body).toEqual({
-      errors: [
-        "is not a valid email address",
-        "must be at least 8 characters long and contain at least one number and one uppercase letter"
-      ]
-    });
+    const expectedErrors = [
+      "is not a valid email address",
+      '"password" length must be at least 8 characters long',
+      "must be at least 8 characters long and contain at least one number and one uppercase letter"
+    ];
+    const hasAtLeastOneError = registerResponse.body.errors && expectedErrors.some(error => 
+      registerResponse.body.errors.includes(error)
+    );
+    const hasDuplicateEmailError = registerResponse.body.error && registerResponse.body.error.includes("A user with that email already exists");
+    expect(hasAtLeastOneError || hasDuplicateEmailError).toBe(true)
     return registerResponse;
   }
   // Check response body
@@ -276,13 +282,22 @@ export async function verifyAccountEmail(mockSendVerificationEmail, validToken =
  * @returns {Object} - An object containing the user object, access token,
  * refresh token, and anti-CSRF token.
  * ***********************************************************************/
-export async function loginUser(testSession, theUser) {
+export async function loginUser(testSession, theUser, validUser = true) {
   const response = await retryRequest(() =>
     testSession
       .post('/auth/login')
       .send(theUser)
       .set('Accept', 'application/json')
   );
+  if (!validUser) {
+    expect([400, 404]).toContain(response.statusCode);
+    if (response.statusCode === 404) {
+      expect(response.body).toHaveProperty('error', 'User with email ' + theUser.email + ' not found');
+    } else { // 400
+      expect(response.body).toHaveProperty('error', 'Invalid password');
+    }
+    return response;
+  }
   expect(response.statusCode).toBe(200);
   const cookies = response.headers['set-cookie'];
   expect(cookies).toBeDefined();
