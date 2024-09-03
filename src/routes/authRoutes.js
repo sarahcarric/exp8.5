@@ -3,7 +3,6 @@
  * @desc Contains the routes for authenticating auth via GitHub OAuth.
  *************************************************************************/
 import express from 'express';
-import { githubAuth, githubCallback } from '../controllers/authController.js';
 import * as authController from '../controllers/authController.js';
 import { validateUserLogin, validateUserRegistration } from '../middleware/dataValidator.js';
 import { authenticate } from '../middleware/authenticate.js';
@@ -13,28 +12,43 @@ import { csrfProtection } from '../middleware/csrfProtection.js';
 import { configureSession } from '../middleware/configureSession.js';
 
 const authRouter = express.Router();
-
-/***********************************************************************
- * @route POST /auth/login
- * @desc Login a user.
- * @access Public
- * @returns {Object} - The user object.
- * *********************************************************************/
+ 
 authRouter.post('/auth/login', validateUserLogin, authController.loginUser, configureSession);
 
-/***********************************************************************
- * @route POST /auth/logout
- * @desc Log out a user.
- * @access Private
- * *********************************************************************/
 authRouter.delete('/auth/logout/:userId', authenticate, csrfProtection, authorize, authController.logoutUser);
 
-/***********************************************************************
- * @route POST /auth/register
- * @desc Create a new, unverified user account and email the user a 
- *       verification link they must click to activate their account.  
- * @access Public
- * *********************************************************************/
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     description: Create a new, unverified user account and email the user a verification link they must click to activate their account.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       500:
+ *         $ref: '#/components/responses/GeneralError'
+ */
 authRouter.post('/auth/register', validateUserRegistration, authController.registerUser);
 
 /***********************************************************************

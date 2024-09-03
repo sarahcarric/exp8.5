@@ -6,31 +6,71 @@
 import mongoose from "mongoose";
 
 export default function errorHandler(err, req, res, next) {
+  let statusCode = 500;
+  let errorResponse = {
+    status: statusCode,
+    error: 'Internal Server Error',
+    message: 'An unexpected error occurred.'
+  };
+
   // Handle SyntaxError for invalid JSON
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    return res.status(400).send({ error: 'Invalid JSON in message body' });
+    statusCode = 400;
+    errorResponse = {
+      status: statusCode,
+      error: 'Invalid JSON',
+      message: 'Invalid JSON in message body'
+    };
   }
 
   // Handle Mongoose validation errors
-  if (err instanceof mongoose.Error.ValidationError) {
-    return res.status(400).send({ error: err.message });
+  else if (err instanceof mongoose.Error.ValidationError) {
+    statusCode = 400;
+    errorResponse = {
+      status: statusCode,
+      error: 'Validation Error',
+      message: err.message,
+      details: Object.keys(err.errors).map(key => ({
+        field: key,
+        message: err.errors[key].message
+      }))
+    };
   }
 
   // Handle Mongoose cast errors for invalid ObjectId
-  if (err instanceof mongoose.Error.CastError && err.kind === 'ObjectId') {
-    return res.status(400).send({ error: 'Invalid ID format' });
+  else if (err instanceof mongoose.Error.CastError && err.kind === 'ObjectId') {
+    statusCode = 400;
+    errorResponse = {
+      status: statusCode,
+      error: 'Invalid ID Format',
+      message: 'Invalid ID format'
+    };
   }
 
   // Handle MongoDB duplicate key errors
-  if (err.code === 11000 || err.code === 11001) {
-    return res.status(400).send({ error: 'A user with that email already exists' });
+  else if (err.code === 11000 || err.code === 11001) {
+    statusCode = 400;
+    errorResponse = {
+      status: statusCode,
+      error: 'Duplicate Key Error',
+      message: 'A user with that email already exists'
+    };
   }
 
   // Handle custom errors with statusCode property
-  if (err.statusCode) {
-    return res.status(err.statusCode).send({ error: err.message });
+  else if (err.statusCode) {
+    statusCode = err.statusCode;
+    errorResponse = {
+      status: statusCode,
+      error: err.message,
+      message: err.message
+    };
   }
 
   // Default to 500 Internal Server Error for unhandled errors
-  return res.status(500).send({ error: err.message });
+  else {
+    errorResponse.message = err.message || errorResponse.message;
+  }
+
+  res.status(statusCode).json(errorResponse);
 }

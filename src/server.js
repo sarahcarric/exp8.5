@@ -8,7 +8,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import cors from 'cors';
-import mongoose from 'mongoose';
+import mongoose, { set } from 'mongoose';
 import passport from 'passport';
 import './middleware/passport.js';
 import userRouter from './routes/userRoutes.js';
@@ -16,6 +16,7 @@ import roundRouter from './routes/roundRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 import rateLimiter from './middleware/rateLimiter.js';
+import setupSwagger from './swagger.js';
 
 dotenv.config();
 
@@ -57,8 +58,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(passport.initialize());
+setupSwagger(app);
 
-//Install app routes
+// Install app routes
 app.use(userRouter);
 app.use(roundRouter);
 app.use(authRouter);

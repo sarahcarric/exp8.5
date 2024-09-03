@@ -153,7 +153,7 @@ export async function registerUser(testSession, newUser, validUser = true) {
     const hasAtLeastOneError = registerResponse.body.errors && expectedErrors.some(error => 
       registerResponse.body.errors.includes(error)
     );
-    const hasDuplicateEmailError = registerResponse.body.error && registerResponse.body.error.includes("A user with that email already exists");
+    const hasDuplicateEmailError = registerResponse.body.error && registerResponse.body.message.includes("A user with that email already exists");
     expect(hasAtLeastOneError || hasDuplicateEmailError).toBe(true)
     return registerResponse;
   }
