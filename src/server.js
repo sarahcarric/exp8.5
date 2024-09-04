@@ -5,6 +5,7 @@
 import dotenv from 'dotenv';
 import sgMail from '@sendgrid/mail';
 import express from 'express';
+import MongoStore from 'connect-mongo';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import cors from 'cors';
@@ -33,6 +34,11 @@ mongoose.connect(connectStr)
 
 const db = mongoose.connection;
 
+// Create TTL index on the 'expires' field in the 'sessions' collection
+db.once('open', () => {
+  db.collection('sessions').createIndex({ "expires": 1 }, { expireAfterSeconds: 0 });
+});
+
 //Initialize Express app
 const app = express();
 
@@ -46,6 +52,9 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
+  store: new MongoStore({ mongoUrl: process.env.MONGODB_URI,
+                          collectionName: 'sessions'
+   }),
   cookie: { secure: process.env.NODE_ENV === 'production', 
             sameSite: 'None',
              httpOnly: true,}

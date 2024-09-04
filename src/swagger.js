@@ -3,6 +3,7 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import User from './models/User.js';
 import mongooseToSwagger from 'mongoose-to-swagger'
+import { TooManyRequestsError, UnauthorizedError } from './utils/errors.js';
 
 const userSwaggerSchema = mongooseToSwagger(User);
 
@@ -111,7 +112,7 @@ const options = {
           properties: {
             status: {
               type: 'integer',
-              example: 400
+              example: 409
             },
             error: {
               type: 'string',
@@ -137,6 +138,74 @@ const options = {
             message: {
               type: 'string',
               example: 'Custom error message'
+            }
+          }
+        },
+        UnauthorizedErrorResponse: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'integer',
+              example: 401
+            },
+            error: {
+              type: 'string',
+              example: 'Invalid access token'
+            },
+            message: {
+              type: 'string',
+              example: 'Invalid access token'
+            }
+          }
+        },
+        ForbiddenErrorResponse: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'integer',
+              example: 403
+            },
+            error: {
+              type: 'string',
+              example: 'Invalid anti-CSRF token'
+            },
+            message: {
+              type: 'string',
+              example: 'Invalid anti-CSRF token'
+            }
+          }
+        },
+        NotFoundErrorResponse: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'integer',
+              example: 404
+            },
+            error: {
+              type: 'string',
+              example: 'Not Found'
+            },
+            message: {
+              type: 'string',
+              example: 'User not found'
+            }
+          }
+        },
+        TooManyRequestsErrorResponse: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'integer',
+              example: 429
+            },
+            error: {
+              type: 'string',
+              example: 'Too many requests'
+            },
+            message: {
+              type: 'string',
+              example: 'Too many requests, please try again later.'
             }
           }
         }
@@ -201,6 +270,46 @@ const options = {
               }
             }
           }
+        },
+        UnauthorizedError: {
+          description: 'Unauthorized error',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+              }
+            }
+          }
+        },
+        ForbiddenError: {
+          description: 'Forbidden error',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/ForbiddenErrorResponse'
+              }
+            }
+          }
+        },
+        NotFoundError: {
+          description: 'Not Found error',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+              }
+            }
+          } 
+        },
+        TooManyRequestsError: {
+          description: 'Too many requests',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/TooManyRequestsErrorResponse'
+              }
+            }
+          }
         }
       },
       securitySchemes: {
@@ -219,11 +328,18 @@ const options = {
         antiCsrfToken: {
           type: 'apiKey',
           in: 'header',
-          name: 'X-anti-csrf-token',
+          name: 'x-anti-csrf-token',
           description: 'Anti-CSRF token required for security.'
         }
       }
-    }
+    },
+    security: [
+      {
+        cookieAuthAccessToken: [],
+        cookieAuthRefreshToken: [],
+        antiCsrfToken: []
+      }
+    ],
   },
   apis: ['./src/routes/*.js'] // Path to the API docs from project root directory
 };

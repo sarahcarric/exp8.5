@@ -5,6 +5,7 @@
 import authService from '../services/authService.js';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import passport from 'passport';
 import { UserNotFoundError, InvalidAccessTokenError, InvalidAntiCsrfTokenError, InvalidOauthTokenError } from '../utils/errors.js';
 
@@ -48,9 +49,20 @@ export const logoutUser = (req, res, next) => {
     const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
-    return res.status(200).json({message: 'User logged out' });
+
+    // Destroy the session
+    req.session.destroy(async (err) => {
+      if (err) {
+        console.log("Error destroying session:", err);
+        return res.status(500).json({ message: 'Failed to destroy session' });
+      }
+
+      // Remove the session document from the MongoDB collection
+      const sessionId = req.sessionID;
+      await mongoose.connection.collection('sessions').deleteOne({ _id: sessionId });
+      return res.status(200).json({message: 'User logged out' });
+    });
   } catch (err) {
-    console.log("Error verifying access token:", err);
     // Handle token verification errors
     if (err.name === 'TokenExpiredError') {
       res.clearCookie('accessToken');
