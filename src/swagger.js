@@ -1,11 +1,22 @@
 // swagger.js
+import express from 'express';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import User from './models/User.js';
 import mongooseToSwagger from 'mongoose-to-swagger'
-import { TooManyRequestsError, UnauthorizedError } from './utils/errors.js';
 
 const userSwaggerSchema = mongooseToSwagger(User);
+if (userSwaggerSchema.properties && userSwaggerSchema.properties.accountInfo && userSwaggerSchema.properties.accountInfo.properties) {
+  delete userSwaggerSchema.properties.accountInfo.properties.password;
+  delete userSwaggerSchema.properties.accountInfo.properties.emailVerified;
+  delete userSwaggerSchema.properties.accountInfo.properties.verificationDueBy;
+  delete userSwaggerSchema.properties.accountInfo.properties.passResetToken;
+  delete userSwaggerSchema.properties.accountInfo.properties.passResetVerifiedToken;
+  delete userSwaggerSchema.properties.accountInfo.properties.mfaSecret;
+  delete userSwaggerSchema.properties.accountInfo.properties.mfaVerified;
+  delete userSwaggerSchema.properties.accountInfo.properties.mfaAttempts;
+  delete userSwaggerSchema.properties.accountInfo.properties.mfaStartTime;
+}
 
 const options = {
   definition: {
@@ -347,7 +358,11 @@ const options = {
 const swaggerSpec = swaggerJSDoc(options);
 
 const setupSwagger = (app) => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec,
+    {
+      customSiteTitle: 'SpeedScore API Documentation'
+    }
+  ));
 };
 
 export default setupSwagger;

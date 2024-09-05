@@ -87,8 +87,13 @@ export default {
     }
     const userObject = {...user};
     delete userObject.accountInfo.password;
-    delete userObject.accountInfo.securityQuestion;
-    delete userObject.accountInfo.securityAnswer;
+    delete userObject.accountInfo.emailVerified;
+    delete userObject.accountInfo.passResetToken;
+    delete userObject.accountInfo.passResetVerifiedToken;
+    delete userObject.accountInfo.mfaSecret;
+    delete userObject.accountInfo.mfaVerified;
+    delete userObject.accountInfo.mfaAttempts;
+    delete userObject.accountInfo.mfaStartTime;
     delete userObject.__v;
     return userObject;
   },
@@ -208,7 +213,7 @@ export default {
       throw new UserPasswordResetCodeInvalidError('Invalid reset code');
     }
     const verifyToken = jwt.sign({email, resetCode}, process.env.JWT_SECRET, { expiresIn: 15 * 60 });
-    user.accountInfo.passResetVerfiedToken = verifyToken;
+    user.accountInfo.passResetVerifiedToken = verifyToken;
     await user.save();
   },
 
@@ -224,7 +229,7 @@ export default {
     if (!user) {
       throw new UserNotFoundError('User with email ' + email + ' not found');
     }
-    jwt.verify(user.accountInfo.passResetVerfiedToken, process.env.JWT_SECRET); 
+    jwt.verify(user.accountInfo.passResetVerifiedToken, process.env.JWT_SECRET); 
     const salt = await bcrypt.genSalt(10);
     user.accountInfo.password = await bcrypt.hash(password, salt);
     user.accountInfo.passResetToken = null;

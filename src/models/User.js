@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: null
     },
-    passResetVerfiedToken: {
+    passResetVerifiedToken: {
       type: String,
      default: null
     },

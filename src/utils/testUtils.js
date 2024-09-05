@@ -164,7 +164,7 @@ export async function registerUser(testSession, newUser, validUser = true) {
       emailVerified: false,
       verificationDueBy: expect.any(String), // Ensure this is a valid date
       passResetToken: null,
-      passResetVerfiedToken: null,
+      passResetVerifiedToken: null,
       mfaSecret: null,
       mfaVerified: false,
       mfaAttempts: 0,
