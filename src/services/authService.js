@@ -81,6 +81,9 @@ export default {
     if (!user) {
       throw new UserNotFoundError('User with email ' + email + ' not found');
     } 
+    if (!user.accountInfo.emailVerified) {
+      throw new UserNotFoundError('User has an account but has not yet verified their email. Please check your email for a verification link.');
+    }
     const validPassword = await bcrypt.compare(password, user.accountInfo.password);
     if (!validPassword) {
       throw new UserPasswordInvalidError('Invalid password');

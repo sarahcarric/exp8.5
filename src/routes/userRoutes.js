@@ -26,7 +26,7 @@ userRouter.get('/users', authenticate, csrfProtection, userController.getUsers);
  * *********************************************************************/
 userRouter.get('/users/:userId', authenticate, csrfProtection, authorize, userController.getUser);
 
-//userRouter.put('/users/:userId', userController.updateUser);
+userRouter.put('/users/:userId', authenticate, csrfProtection, authenticate, userController.updateUser);
 
 /***********************************************************************
  * @route DELETE /users/:userId

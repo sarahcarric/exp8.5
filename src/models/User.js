@@ -75,7 +75,10 @@ const userSchema = new mongoose.Schema({
   identityInfo: {
     displayName: {
       type: String,
-      default: ""
+      required: [true, 'Display name is required'],
+      default: function() {
+        return this.accountInfo.email.split('@')[0];
+      }
     },
     profilePic: {
       type: String,
@@ -113,7 +116,7 @@ const userSchema = new mongoose.Schema({
       "3W": {type: Boolean, default: false},
       "4W": {type: Boolean, default: false},
       "5W": {type: Boolean, default: false},
-      Hybrid: {type: Boolean, default: false},
+      "Hybrid": {type: Boolean, default: false},
       "1I": {type: Boolean, default: false},
       "2I": {type: Boolean, default: false},
       "3I": {type: Boolean, default: false},
@@ -123,11 +126,11 @@ const userSchema = new mongoose.Schema({
       "7I": {type: Boolean, default: false},
       "8I": {type: Boolean, default: false},
       "9I": {type: Boolean, default: false},
-      PW: {type: Boolean, default: false},
-      GW: {type: Boolean, default: false},
-      SW: {type: Boolean, default: false},
-      LW: {type: Boolean, default: false},
-      Putter: {type: Boolean, default: false}
+      "PW": {type: Boolean, default: false},
+      "GW": {type: Boolean, default: false},
+      "SW": {type: Boolean, default: false},
+      "LW": {type: Boolean, default: false},
+      "Putter": {type: Boolean, default: false}
     },
     clubComments: {
       type: String,

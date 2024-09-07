@@ -130,7 +130,7 @@ authRouter.post('/auth/login', validateUserLogin, authController.loginUser, conf
  *       500:
  *         $ref: '#/components/responses/GeneralError'
  */
-authRouter.delete('/auth/logout/:userId', authenticate, csrfProtection, authorize, authController.logoutUser);
+authRouter.delete('/auth/logout/:userId', authorize, authController.logoutUser);
 
 /**
  * @swagger

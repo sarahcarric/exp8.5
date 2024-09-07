@@ -27,49 +27,33 @@ export const loginUser = async (req, res, next) => {
 }
 
 /***********************************************************************
- * logoutUser (POST /auth/logout)
- * @desc Log out a user.
+ * logoutUser (POST /auth/logout/:userId)
+ * @desc Log out a user. 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @param {Function} next - The next middleware function.
- * @returns a 200 status code if user could be logged out successfully.
+ * @returns a 200 status code, even if errors occurred.
  *************************************************************************/
-export const logoutUser = (req, res, next) => {
-  const accessToken = req.cookies.accessToken;
-  const antiCsrfToken = req.headers['x-anti-csrf-token'];
-  if (!accessToken) {
-    res.clearCookie('refreshToken');
-    return res.status(200).json({ message: 'User logged out' });
-  }
-  if (antiCsrfToken !== req.session.antiCsrfToken) {
-    return next(new InvalidAntiCsrfTokenError("Invalid anti-CSRF token"));
-  }
+export const logoutUser = async (req, res) => {
   try {
-    // Verify the access token
-    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
-
-    // Destroy the session
-    req.session.destroy(async (err) => {
-      if (err) {
-        console.log("Error destroying session:", err);
-        return res.status(500).json({ message: 'Failed to destroy session' });
-      }
-
-      // Remove the session document from the MongoDB collection
-      const sessionId = req.sessionID;
-      await mongoose.connection.collection('sessions').deleteOne({ _id: sessionId });
-      return res.status(200).json({message: 'User logged out' });
-    });
-  } catch (err) {
-    // Handle token verification errors
-    if (err.name === 'TokenExpiredError') {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
-      return res.json({message: 'User logged out' });
-    }
-    return next(new InvalidAccessTokenError("Invalid access token"));
+      req.session.destroy(async (err) => {
+          if (err) {
+              console.log("Error destroying session:", err);
+          } 
+          // Attempt to remove the session document from the MongoDB collection
+          const sessionId = req.sessionID;
+          try {
+              await mongoose.connection.collection('sessions').deleteOne({ _id: sessionId });
+          } catch (deleteErr) {
+              console.log("Error deleting session from database: ", deleteErr);
+          }    
+          return res.status(200).json({ message: 'User logged out' });
+      });
+  } catch (err) {
+      console.log("Unexpected error during logout: ", err);
+      return res.status(200).json({ message: 'User logged out with errors' });
   }
 };
 

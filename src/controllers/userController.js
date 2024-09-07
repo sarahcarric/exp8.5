@@ -37,6 +37,22 @@ export const getUser = async (req, res, next) => {
 }
 
 /***********************************************************************
+ * updateUser (PUT /users/:userId)
+ * @desc Update a user by ID.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ * *********************************************************************/
+export const updateUser = async (req, res, next) => {
+  try {
+    const user = await userService.updateUser(req.params.userId, req.body);
+    res.status(200).json(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/***********************************************************************
  * deleteUser (DELETE /users/:userId)
  * @desc Delete a user by ID.
  * @param {Object} req - The request object.

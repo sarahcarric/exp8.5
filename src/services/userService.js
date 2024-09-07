@@ -33,7 +33,38 @@ export default {
   getUser: async (userId) => {
     const user = await User.findById(userId).lean();
     const userObject = {...user};
+    // Remove sensitive information from the user object
     delete userObject.accountInfo.password;
+    delete userObject.accountInfo.emailVerified;
+    delete userObject.accountInfo.passResetToken;
+    delete userObject.accountInfo.passResetVerifiedToken;
+    delete userObject.accountInfo.mfaSecret;
+    delete userObject.accountInfo.mfaVerified;
+    delete userObject.accountInfo.mfaAttempts;
+    delete userObject.accountInfo.mfaStartTime;
+    delete userObject.__v;
+    return userObject;
+  },
+
+  /***********************************************************************
+   * updateUser
+   * @descr Update a user by ID.
+   * @param {string} userId - The ID of the user to update.
+   * @param {Object} user - The updated user object.
+   * @returns {Promise<Object>} The user object.
+   * *********************************************************************/
+  updateUser: async (userId, user) => {
+    const updatedUser = await User.findByIdAndUpdate(userId, user, {new: true}).lean();
+    const userObject = {...updatedUser};
+    //Remove sensitive information from the user object
+    delete userObject.accountInfo.password;
+    delete userObject.accountInfo.emailVerified;
+    delete userObject.accountInfo.passResetToken;
+    delete userObject.accountInfo.passResetVerifiedToken;
+    delete userObject.accountInfo.mfaSecret;
+    delete userObject.accountInfo.mfaVerified;
+    delete userObject.accountInfo.mfaAttempts;
+    delete userObject.accountInfo.mfaStartTime;
     delete userObject.__v;
     return userObject;
   },

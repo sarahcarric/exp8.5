@@ -48,6 +48,8 @@ app.use(cookieParser());
 //Install built-in Express body-parser middleware
 app.use(express.json());
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -55,9 +57,9 @@ app.use(session({
   store: new MongoStore({ mongoUrl: process.env.MONGODB_URI,
                           collectionName: 'sessions'
    }),
-  cookie: { secure: process.env.NODE_ENV === 'production', 
-            sameSite: 'None',
-             httpOnly: true,}
+  cookie: { secure: isProduction, 
+            sameSite: isProduction ? 'None' : false, // SameSite=None in production, disable SameSite in development
+            httpOnly: true,}
 }));
 
 const corsOptions = {
@@ -66,6 +68,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(passport.initialize());
 setupSwagger(app);
 
