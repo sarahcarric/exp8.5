@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
-export const configureSession = (req, res, next) => {
+export const configureSession = (req, res, next, sendResponse = true) => {
+  console.log('Entering configureSession middleware with user email:', req.user.accountInfo.email);
+  console.log("sendResponse:", sendResponse); 
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -14,12 +16,18 @@ export const configureSession = (req, res, next) => {
   const antiCsrfToken = crypto.randomBytes(32).toString('hex');
   res.cookie('accessToken', accessToken, cookieOptions);
   res.cookie('refreshToken', refreshToken, {...cookieOptions, maxAge: 604800000 });
-  req.session.user = req.user;
+  //req.session.user = req.user;
+  req.session.userId = req.user._id;
+  req.session.userRole = req.user.accountInfo.role;
   req.session.antiCsrfToken = antiCsrfToken;
   req.session.save((err) => {
     if (err) {
       return res.status(500).json({ message: 'Failed to save session' });
     }
-    res.status(200).json(req.user);
+    if (sendResponse) {
+      return res.status(200).json(req.user);
+    } else {
+      next();
+    }
   });
 }

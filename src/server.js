@@ -2,6 +2,7 @@
  * @file: server.js
  * @desc: Defines the main server code for SpeedScore's API.
   *************************************************************************/
+  
 import dotenv from 'dotenv';
 import sgMail from '@sendgrid/mail';
 import express from 'express';
@@ -24,6 +25,7 @@ dotenv.config();
 sgMail.setApiKey(process.env.SENDGRID_API_KEY); 
 
 const connectStr = process.env.MONGODB_URI;
+const isProduction = process.env.NODE_ENV === 'production';
 
 //Connect to MongoDB database using Mongoose library
 mongoose.connect(connectStr)
@@ -42,29 +44,20 @@ db.once('open', () => {
 //Initialize Express app
 const app = express();
 
-// Log all incoming requests
-// app.use((req, res, next) => {
-//   console.log(`Incoming request: ${req.method} ${req.url}`);
-//   next();
-// });
-
+//Install rate limiter middleware
 app.use(rateLimiter);
 
+// Set up cookie parsing
 app.use(cookieParser());
-//Install built-in Express body-parser middleware
+
+// Set up JSON request body parsing
 app.use(express.json({ limit: '2mb' }));
 
-const isProduction = process.env.NODE_ENV === 'production';
-
-// app.use((req, res, next) => {
-//   console.log('Session iD before processing:', req.session.id);
-//   next();
-// });
-
+// Set up session handling
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   store: new MongoStore({ mongoUrl: process.env.MONGODB_URI,
                           collectionName: 'sessions'
    }),
@@ -73,12 +66,7 @@ app.use(session({
             httpOnly: true,}
 }));
 
-// Middleware to log session after processing
-// app.use((req, res, next) => {
-//   console.log('Session ID after processing:', req.session.id);
-//   next();
-// });
-
+// Enable CORS for all routes
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' ? 'https://speedscore.org' : 'http://localhost:3000',
   credentials: true // Allow cookies to be sent with requests
@@ -86,7 +74,11 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// Initialize Passport
 app.use(passport.initialize());
+
+// Set up Swagger API documentation
 setupSwagger(app);
 
 // Install app routes

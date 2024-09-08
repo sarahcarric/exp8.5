@@ -29,8 +29,16 @@ passport.use(new GithubStrategy({
       profile = profile._json
     };
     try {
+      let email;
+      if (profile.emails && profile.emails[0].value) {
+        email = profile.emails[0].value;
+      } else if (profile.email) {
+        email = profile.email;
+      } else {
+        return done(new Error('Cannot authenticate with GitHub. Github profile does not have an email address'));
+      }
     // Find or create user in your database
-    let user = await User.findOne({'accountInfo.email': profile.emails[0].value });
+    let user = await User.findOne({'accountInfo.email': email });
     if (user) {
       // Check if the oauthProvider is not 'github'
       if (user.accountInfo.oauthProvider !== 'github') {
@@ -42,7 +50,7 @@ passport.use(new GithubStrategy({
     } else {
       user = new User({
         accountInfo: {
-          email: profile.emails[0].value,
+          email: email,
           password: null, // No password needed
           oauthProvider: 'github',
           emailVerified: true

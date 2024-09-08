@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import passport from 'passport';
+import { configureSession } from '../middleware/configureSession.js';
 import { UserNotFoundError, InvalidAccessTokenError, InvalidAntiCsrfTokenError, InvalidOauthTokenError } from '../utils/errors.js';
 
 /***********************************************************************
@@ -38,23 +39,18 @@ export const logoutUser = async (req, res) => {
   try {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
-      req.session.destroy(async (err) => {
-          if (err) {
-              console.log("Error destroying session:", err);
-          } 
-          // Attempt to remove the session document from the MongoDB collection
-          const sessionId = req.sessionID;
-          try {
-              await mongoose.connection.collection('sessions').deleteOne({ _id: sessionId });
-          } catch (deleteErr) {
-              console.log("Error deleting session from database: ", deleteErr);
-          }    
+      req.session.destroy((err) => {
+        if (err) {
+          console.log("Error destroying session on logout:", err);
+          return res.status(200).json({ message: 'User logged out but session not deleted.' });
+        } else {
           return res.status(200).json({ message: 'User logged out' });
+        }
       });
-  } catch (err) {
+    } catch (err) {
       console.log("Unexpected error during logout: ", err);
-      return res.status(200).json({ message: 'User logged out with errors' });
-  }
+      return res.status(200).json({ message: 'User logged out, but unexpected error occurred during logout' });
+    }
 };
 
 /***********************************************************************
@@ -268,13 +264,23 @@ export const getAntiCsrfToken = (req, res) => {
  * @returns {void}
  *************************************************************************/
 export const githubAuth = (req, res, next) => {
+  console.log("Entering githubAuth controller");
   const oauthToken = crypto.randomBytes(32).toString('hex');
-  res.cookie('oauthToken', oauthToken, { httpOnly: true, secure: true });
+  res.cookie('oauthToken', oauthToken, 
+    { httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : false
+    });
+  
+  console.log("Cookie set with OAuth token");
 
   passport.authenticate('github', {
     scope: ['user:email', 'read:user'],
     state: oauthToken
   })(req, res, next);
+
+  console.log("Called passport.authenticate for GitHub");
+
 };
 
 /***********************************************************************
@@ -286,10 +292,16 @@ export const githubAuth = (req, res, next) => {
  * @returns {void}
  *************************************************************************/
 export const githubCallback = (req, res, next) => {
-  const oauthToken = req.cookies.oauthToken
+  console.log("Entering githubCallback controller");
+  const oauthToken = req.cookies.oauthToken;
+  console.log('OAuth token from cookie:', oauthToken);
+  console.log('State token from query:', req.query.state);
+
   if (req.query.state !== oauthToken) {
+    console.error('State token mismatch');
     return next(new InvalidOauthTokenError("State token returned by Github does not match session token"));
   }
+
   passport.authenticate('github', (err, user) => {
     if (err) {
       console.error("Error during passport authentication: ", err);
@@ -299,7 +311,21 @@ export const githubCallback = (req, res, next) => {
       console.error("No user found during passport authentication");
       return next(new UserNotFoundError('Login failed. No user found'));
     }
+    // Set req.user to the authenticated user
     req.user = user;
-    next();
-  })(req, res, next);
-};
+
+    // Call configureSession middleware
+    console.log("Calling configureSession middleware...");
+    configureSession(req, res, (err) => {
+      if (err) {
+        console.error("Error during configureSession: ", err);
+        return next(err);
+      }
+      console.log("Redirecting to client with user object");
+      //res.redirect('http://google.com');
+      //res.redirect(`http://localhost:3000?user=${encodeURIComponent(JSON.stringify(req.user))}`);
+      console.log("req.user._id:", req.user._id);
+      res.redirect('http://localhost:3000?id=' + req.user._id);
+    }, false);
+    })(req, res, next);
+  };

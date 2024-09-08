@@ -56,14 +56,12 @@ export default {
     if (!user.rounds) { // Initialize rounds if it doesn't exist
       user.rounds = [];
     }
-    console.log('pushed roundObject', roundObject);
     user.rounds.push(roundObject);
     await user.save(); 
     //Using toObject() gets us min, sec, SGS, and time virtual fields
     const savedRound = user.rounds[user.rounds.length - 1].toObject();
     delete savedRound.id; // Remove the id property
     delete savedRound.__v;
-    console.log('saved round', savedRound);
     return savedRound;
   },
 

@@ -77,8 +77,8 @@ const accessRules = {
  * @param {Function} next - The next middleware function
  *************************************************************************/
 export const authorize = (req, res, next) => {
-  const userId = req.session.user._id;
-  const role = req.session.user.accountInfo.role;
+  const userId = req.session.userId;
+  const role = req.session.userRole;
   const resource = req.path.split('/')[1];
   const resourceId = req.params.userId;
   const action = req.method; 
