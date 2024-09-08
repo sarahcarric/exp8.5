@@ -1,5 +1,4 @@
 // swagger.js
-import express from 'express';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import User from './models/User.js';

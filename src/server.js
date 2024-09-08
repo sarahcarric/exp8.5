@@ -42,13 +42,24 @@ db.once('open', () => {
 //Initialize Express app
 const app = express();
 
+// Log all incoming requests
+// app.use((req, res, next) => {
+//   console.log(`Incoming request: ${req.method} ${req.url}`);
+//   next();
+// });
+
 app.use(rateLimiter);
 
 app.use(cookieParser());
 //Install built-in Express body-parser middleware
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+// app.use((req, res, next) => {
+//   console.log('Session iD before processing:', req.session.id);
+//   next();
+// });
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -61,6 +72,12 @@ app.use(session({
             sameSite: isProduction ? 'None' : false, // SameSite=None in production, disable SameSite in development
             httpOnly: true,}
 }));
+
+// Middleware to log session after processing
+// app.use((req, res, next) => {
+//   console.log('Session ID after processing:', req.session.id);
+//   next();
+// });
 
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' ? 'https://speedscore.org' : 'http://localhost:3000',

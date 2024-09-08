@@ -100,11 +100,11 @@ const userSchema = new mongoose.Schema({
     personalBest: {
       strokes: {
         type: Number,
-        default: 100
+        default: ""
       },
       seconds: {
         type: Number,
-        default: 5400
+        default: ""
       },
       course: {
         type: String,

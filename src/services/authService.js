@@ -6,6 +6,7 @@
  * @module authService
  *************************************************************************/
 import User from '../models/User.js';
+import RoundSchema from '../models/Round.js';
 import { UserAlreadyVerifiedError, UserNotFoundError, 
          InvalidRefreshTokenError, UserPasswordInvalidError, 
          UserPasswordResetCodeInvalidError, MfaSessionError} 
@@ -16,6 +17,7 @@ import jwt from 'jsonwebtoken';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 
 const MAX_MFA_TIME = 60 * 1000 * 10 //10 minutes
 const MAX_MFA_ATTEMPTS = 5;
@@ -77,7 +79,8 @@ export default {
    * @throws {UserNotFoundError} If the user is not found.
    *************************************************************************/
   loginUser: async (email, password) => {
-    const user = await User.findOne({ 'accountInfo.email': email }).lean();
+    const Round = mongoose.model('Round', RoundSchema);
+    const user = await User.findOne({ 'accountInfo.email': email }).lean({ virtuals: true });
     if (!user) {
       throw new UserNotFoundError('User with email ' + email + ' not found');
     } 
@@ -88,17 +91,25 @@ export default {
     if (!validPassword) {
       throw new UserPasswordInvalidError('Invalid password');
     }
-    const userObject = {...user};
-    delete userObject.accountInfo.password;
-    delete userObject.accountInfo.emailVerified;
-    delete userObject.accountInfo.passResetToken;
-    delete userObject.accountInfo.passResetVerifiedToken;
-    delete userObject.accountInfo.mfaSecret;
-    delete userObject.accountInfo.mfaVerified;
-    delete userObject.accountInfo.mfaAttempts;
-    delete userObject.accountInfo.mfaStartTime;
-    delete userObject.__v;
-    return userObject;
+    //We need to add the virtual round fields to the rounds subdocument array
+    user.rounds = user.rounds.map(round => {
+      const tempRoundDoc = new Round(round);
+      const virtuals = tempRoundDoc.toObject(); // Virtuals are included by default
+      delete virtuals.id;
+      // Merge virtual fields into the original round object, preserving original values
+      return { ...virtuals, ...round };
+    });
+    
+    delete user.accountInfo.password;
+    delete user.accountInfo.emailVerified;
+    delete user.accountInfo.passResetToken;
+    delete user.accountInfo.passResetVerifiedToken;
+    delete user.accountInfo.mfaSecret;
+    delete user.accountInfo.mfaVerified;
+    delete user.accountInfo.mfaAttempts;
+    delete user.accountInfo.mfaStartTime;
+    delete user.__v;
+    return user;
   },
 
   /***********************************************************************

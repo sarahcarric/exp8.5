@@ -27,7 +27,7 @@ roundRouter.get('/users/:userId/rounds', authenticate, authorize, roundControlle
  * *********************************************************************/
 roundRouter.post('/users/:userId/rounds', authenticate, csrfProtection, authorize, validateRound, roundController.addRound);
 
-//roundRouter.put('/users/:userId/rounds/:roundId', roundController.updateRound);
+roundRouter.put('/users/:userId/rounds/:roundId', authenticate, csrfProtection, authorize, validateRound, roundController.updateRound);
 
 //roundRouter.delete('/users/:userId/rounds/:roundId', roundController.deleteRound);
 

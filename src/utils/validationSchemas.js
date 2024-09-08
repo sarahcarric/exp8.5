@@ -10,8 +10,10 @@ export const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const passwordRegEx = /(?=.*[0-9])(?=.*[A-Z])/;
 
 export const roundJoiSchema = Joi.object({
+  _id: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
   date: Joi.date().required(),
   course: Joi.string().required(),
+  holes: Joi.number().integer().valid(9,18).required(),
   type: Joi.string().valid('practice', 'tournament').required(),
   strokes: Joi.number().integer().min(1).max(300).required(),
   seconds: Joi.number().integer().min(0).max(21600).required(),

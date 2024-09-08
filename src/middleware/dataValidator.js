@@ -20,7 +20,8 @@ export const validateUserLogin = (req, res, next) => {
   });
   const { error } = loginSchema.validate(req.body, { abortEarly: false });
   if (error) {
-    return res.status(400).json({ errors: error.details.map(detail => detail.message) });
+    return res.status(400).json({message: "Error validing email and password used for login",
+                                 errors: error.details.map(detail => detail.message) });
   }
   next();
 };
@@ -42,7 +43,8 @@ export const validateUserRegistration = (req, res, next) => {
   });
   const { error } = registrationSchema.validate(req.body, { abortEarly: false });
   if (error) {
-    return res.status(400).json({ errors: error.details.map(detail => detail.message) });
+    return res.status(400).json({message: "Error validating email and password used for registration",
+                                 errors: error.details.map(detail => detail.message) });
   }
   next();
 };
@@ -57,7 +59,7 @@ export const validateUserRegistration = (req, res, next) => {
 export const validateUser = (req, res, next) => {
   const { error } = userJoiSchema.validate(req.body, { abortEarly: false });
   if (error) {
-    return res.status(400).json({ errors: error.details.map(detail => detail.message) });
+    return res.status(400).json({message: "Error validing user",errors: error.details.map(detail => detail.message) });
   }
   next();
 };
@@ -70,9 +72,16 @@ export const validateUser = (req, res, next) => {
  * @param {Function} next - The next middleware function.
  ************************************************************************/
 export const validateRound = (req, res, next) => {
+  //Strip out the virtuals from the request body
+  const round = {...req.body};
+  delete round.SGS;
+  delete round.time;
+  delete round.min;
+  delete round.sec;
+  req.body = round;
   const { error } = roundJoiSchema.validate(req.body, { abortEarly: false });
   if (error) {
-    return res.status(400).json({ errors: error.details.map(detail => detail.message) });
+    return res.status(400).json({message: "Error validating round", errors: error.details.map(detail => detail.message) });
   }
   next();
 };

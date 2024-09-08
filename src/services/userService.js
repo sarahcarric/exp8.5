@@ -6,6 +6,30 @@
  *************************************************************************/
 import User from '../models/User.js';
 
+/***********************************************************************
+ * @function traverseObject
+ * @descr Recursively traverses sourceObj, setting each corresponding
+ *        property in destObj to the prop value in sourceObj.
+ * @param {Object} destObj - The object to copy properties to.
+ * @param {Object} sourceObj - The object to copy properties from.
+ * @returns {Object} - A new object with the same keys and values.
+ * *********************************************************************/
+function deepCopy(destObj, sourceObj) {
+  for (const key in sourceObj) {
+    if (typeof sourceObj[key] === 'object' && sourceObj[key] !== null) {
+      // If the property is an object, recursively call deepCopy
+      if (!destObj[key]) {
+        destObj[key] = {};
+      }
+      deepCopy(destObj[key], sourceObj[key]);
+    } else {
+      // If the property is not an object, simply assign the value
+      destObj[key] = sourceObj[key];
+    }
+  }
+  return destObj;
+}
+
 export default {
 
   /***********************************************************************
@@ -31,43 +55,64 @@ export default {
    * @returns {Promise<Object>} The user object.
   *************************************************************************/
   getUser: async (userId) => {
-    const user = await User.findById(userId).lean();
-    const userObject = {...user};
-    // Remove sensitive information from the user object
-    delete userObject.accountInfo.password;
-    delete userObject.accountInfo.emailVerified;
-    delete userObject.accountInfo.passResetToken;
-    delete userObject.accountInfo.passResetVerifiedToken;
-    delete userObject.accountInfo.mfaSecret;
-    delete userObject.accountInfo.mfaVerified;
-    delete userObject.accountInfo.mfaAttempts;
-    delete userObject.accountInfo.mfaStartTime;
-    delete userObject.__v;
-    return userObject;
+    try {
+      const user = await User.findById(userId).lean();
+      const userObject = {...user};
+      // Remove sensitive information from the user object
+      delete userObject.accountInfo.password;
+      delete userObject.accountInfo.emailVerified;
+      delete userObject.accountInfo.passResetToken;
+      delete userObject.accountInfo.passResetVerifiedToken;
+      delete userObject.accountInfo.mfaSecret;
+      delete userObject.accountInfo.mfaVerified;
+      delete userObject.accountInfo.mfaAttempts;
+      delete userObject.accountInfo.mfaStartTime;
+      delete userObject.__v;
+      return userObject;
+    } catch (err) {
+      console.error(err);
+      next(err);
+    }
   },
 
   /***********************************************************************
    * updateUser
-   * @descr Update a user by ID.
+   * @descr Update document whose ID matches the userId. The user object
+   *       contains the fields to be updated. For each field in user, 
+   *       update the corresponding field in the document. Any fields not
+   *       present in the user object will remain unchanged.
    * @param {string} userId - The ID of the user to update.
    * @param {Object} user - The updated user object.
    * @returns {Promise<Object>} The user object.
    * *********************************************************************/
   updateUser: async (userId, user) => {
-    const updatedUser = await User.findByIdAndUpdate(userId, user, {new: true}).lean();
-    const userObject = {...updatedUser};
-    //Remove sensitive information from the user object
-    delete userObject.accountInfo.password;
-    delete userObject.accountInfo.emailVerified;
-    delete userObject.accountInfo.passResetToken;
-    delete userObject.accountInfo.passResetVerifiedToken;
-    delete userObject.accountInfo.mfaSecret;
-    delete userObject.accountInfo.mfaVerified;
-    delete userObject.accountInfo.mfaAttempts;
-    delete userObject.accountInfo.mfaStartTime;
-    delete userObject.__v;
-    return userObject;
-  },
+    const userDoc = await User.findById(userId).lean();
+    if (!userDoc) {
+      throw new UserNotFoundError('User with id ' + userId + ' not found');
+    }
+    try {
+      const updatedUser = deepCopy(userDoc, user);
+      const savedUpdatedUser = await User.findByIdAndUpdate(
+        userId,
+        updatedUser,
+        { new: true }, // Return the updated document
+      ).lean();
+      //Remove sensitive information from the user object
+      delete savedUpdatedUser.accountInfo.password;
+      delete savedUpdatedUser.accountInfo.emailVerified;
+      delete savedUpdatedUser.accountInfo.passResetToken;
+      delete savedUpdatedUser.accountInfo.passResetVerifiedToken;
+      delete savedUpdatedUser.accountInfo.mfaSecret;
+      delete savedUpdatedUser.accountInfo.mfaVerified;
+      delete savedUpdatedUser.accountInfo.mfaAttempts;
+      delete savedUpdatedUser.accountInfo.mfaStartTime;
+      delete savedUpdatedUser.__v;
+      return savedUpdatedUser;
+    } catch (err) {
+      console.error(err);
+      next(err);
+    }
+},
 
  /***********************************************************************
    * deleteUser

@@ -18,6 +18,11 @@ const roundSchema = new mongoose.Schema({
     enum : ['practice','tournament'],
     required: true
   },
+  holes: {
+    type: Number,
+    required: true,
+    enum : [9,18]
+  },
   strokes: {
     type: Number,
     required: true,
@@ -45,6 +50,23 @@ roundSchema.virtual('time').get(function() {
   const seconds = this.seconds % 60;
   return (minutes + ":" + seconds.toString().padStart(2,'0'));
 });
+
+// Virtual property for minutes
+roundSchema.virtual('min').get(function() {
+  const minutes = Math.floor(this.seconds / 60);
+  return minutes;
+});
+
+// Virtual property for seconds remaining after minutes are calculated
+roundSchema.virtual('sec').get(function() {
+  const sec = this.seconds % 60;
+  return sec;
+});
+
+
+
+roundSchema.set('toObject', { virtuals: true });
+roundSchema.set('toJSON', { virtuals: true });
 
 //const Round = mongoose.model('Round', roundSchema);
 export default roundSchema;

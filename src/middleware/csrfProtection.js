@@ -9,6 +9,7 @@ export const csrfProtection = (req, res, next) => {
   }
 
   if (antiCsrfToken !== req.session.antiCsrfToken) {
+    console.log("anti-CSRF token is a mismatch");
     return next(new InvalidAntiCsrfTokenError("Invalid anti-CSRF token"));
   }
 

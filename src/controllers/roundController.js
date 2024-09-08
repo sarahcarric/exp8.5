@@ -32,9 +32,26 @@ export const getRounds = async (req, res, next) => {
  *************************************************************************/
 export const addRound = async (req, res, next) => {
   try {
-    const updatedUser = await roundService.addRound(req.params.userId, req.body);
-    res.status(201).json(updatedUser);
+    const newRound = await roundService.addRound(req.params.userId, req.body);
+    res.status(201).json(newRound);
   } catch (err) {
     next(err)   
+  } 
+}
+
+/***********************************************************************
+ * updateRound (PUT /users/:userId/rounds/:roundId)
+ * @desc Updates a round for a specific user.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ * @returns {Promise<void>} - A promise that resolves when the round is updated.
+ *************************************************************************/
+export const updateRound = async (req, res, next) => {
+  try {
+    const updatedRound = await roundService.updateRound(req.params.userId, req.params.roundId, req.body);
+    res.status(200).json(updatedRound);
+  } catch (err) {
+    next(err);
   } 
 }

@@ -54,20 +54,8 @@ const authRouter = express.Router();
  *           application/json:
  *             schema:
  *               type: object
- *               properties:
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *                 accessTokenExpiry:
- *                   type: string
- *                   format: date-time
- *                   example: '2023-10-01T12:00:00Z'
- *                 refreshTokenExpiry:
- *                   type: string
- *                   format: date-time
- *                   example: '2023-10-01T12:00:00Z'
- *                 antiCsrfToken:
- *                   type: string
- *                   example: 'randomAntiCsrfToken'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/User'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       404:
@@ -115,20 +103,6 @@ authRouter.post('/auth/login', validateUserLogin, authController.loginUser, conf
  *                     value: refreshToken=; HttpOnly; Secure; SameSite=None; Expires=Thu, 01 Jan 1970 00:00:00 GMT
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
- *       403:
- *         $ref: '#/components/responses/ForbiddenError'
- *       429:
- *         description: Too many requests
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Too many requests, please try again later.
- *       500:
- *         $ref: '#/components/responses/GeneralError'
  */
 authRouter.delete('/auth/logout/:userId', authorize, authController.logoutUser);
 
