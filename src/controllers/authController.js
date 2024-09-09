@@ -264,23 +264,17 @@ export const getAntiCsrfToken = (req, res) => {
  * @returns {void}
  *************************************************************************/
 export const githubAuth = (req, res, next) => {
-  console.log("Entering githubAuth controller");
+  // Generate a random OAuth token and set it as a cookie
   const oauthToken = crypto.randomBytes(32).toString('hex');
   res.cookie('oauthToken', oauthToken, 
     { httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'None' : false
     });
-  
-  console.log("Cookie set with OAuth token");
-
   passport.authenticate('github', {
     scope: ['user:email', 'read:user'],
     state: oauthToken
   })(req, res, next);
-
-  console.log("Called passport.authenticate for GitHub");
-
 };
 
 /***********************************************************************
@@ -292,10 +286,7 @@ export const githubAuth = (req, res, next) => {
  * @returns {void}
  *************************************************************************/
 export const githubCallback = (req, res, next) => {
-  console.log("Entering githubCallback controller");
   const oauthToken = req.cookies.oauthToken;
-  console.log('OAuth token from cookie:', oauthToken);
-  console.log('State token from query:', req.query.state);
 
   if (req.query.state !== oauthToken) {
     console.error('State token mismatch');
@@ -314,17 +305,14 @@ export const githubCallback = (req, res, next) => {
     // Set req.user to the authenticated user
     req.user = user;
 
-    // Call configureSession middleware
-    console.log("Calling configureSession middleware...");
+    // Call configureSession middleware with sendResponse set to false
+    //We will redirect to the client URL after the session is configured
     configureSession(req, res, (err) => {
       if (err) {
         console.error("Error during configureSession: ", err);
         return next(err);
       }
-      console.log("Redirecting to client with user object");
-      //res.redirect('http://google.com');
-      //res.redirect(`http://localhost:3000?user=${encodeURIComponent(JSON.stringify(req.user))}`);
-      console.log("req.user._id:", req.user._id);
+      //Redirect to the client URL with the user's ID as a query parameter
       res.redirect('http://localhost:3000?id=' + req.user._id);
     }, false);
     })(req, res, next);

@@ -2,8 +2,6 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
 export const configureSession = (req, res, next, sendResponse = true) => {
-  console.log('Entering configureSession middleware with user email:', req.user.accountInfo.email);
-  console.log("sendResponse:", sendResponse); 
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

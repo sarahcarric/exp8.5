@@ -87,6 +87,9 @@ export default {
     if (!user.accountInfo.emailVerified) {
       throw new UserNotFoundError('User has an account but has not yet verified their email. Please check your email for a verification link.');
     }
+    if (user.accountInfo.oauthProvider !== 'none') {
+      throw new UserNotFoundError('User has an account with a third-party provider. Please log in with ' + user.accountInfo.oauthProvider);
+    }
     const validPassword = await bcrypt.compare(password, user.accountInfo.password);
     if (!validPassword) {
       throw new UserPasswordInvalidError('Invalid password');
