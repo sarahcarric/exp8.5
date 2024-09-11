@@ -34,7 +34,7 @@ export const userJoiSchema = Joi.object({
   speedgolfInfo: Joi.object({
     bio: Joi.string().max(500).default(""),
     homeCourse: Joi.string().default(""),
-    firstRound: Joi.date().default({ value: () => Date.now(), description: 'current date' }),
+    firstRound: Joi.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).default("").allow(""),
     personalBest: Joi.object({
       strokes: Joi.number().default(100),
       seconds: Joi.number().default(5400),

@@ -94,8 +94,9 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: ""},
     firstRound: {
-      type: Date,
-      default: Date.now
+        type: String,
+        match: /^\d{4}-(0[1-9]|1[0-2])$/, // YYYY-MM format
+        default: ""
     },
     personalBest: {
       strokes: {
