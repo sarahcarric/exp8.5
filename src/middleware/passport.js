@@ -28,7 +28,6 @@ passport.use(new GithubStrategy({
     if (profile._json) {
       profile = profile._json
     };
-    console.log('GitHub Profile: ', profile);
     try {
       let email;
       if (profile.emails && profile.emails[0].value) {
@@ -58,7 +57,7 @@ passport.use(new GithubStrategy({
         },
         identityInfo: {
           displayName: profile.displayName,
-          profilePic: profile.photos[0].value
+          profilePic: profile.avatar_url ? profile.avatar_url : 'images/DefaultProfilePic.jpg'
         }
       });
       await user.save();
