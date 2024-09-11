@@ -53,6 +53,11 @@ app.use(cookieParser());
 // Set up JSON request body parsing
 app.use(express.json({ limit: '2mb' }));
 
+// Set trust proxy if behind a proxy
+if (isProduction) {
+  app.set('trust proxy', 1); // Trust the first proxy
+}
+
 // Set up session handling
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -68,7 +73,7 @@ app.use(session({
 
 // Enable CORS for all routes
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' ? 'https://speedscore.org' : 'http://localhost:3000',
+  origin: isProduction ? 'https://speedscore.webdevbook.com' : 'http://localhost:3000',
   credentials: true // Allow cookies to be sent with requests
 };
 

@@ -313,7 +313,7 @@ export const githubCallback = (req, res, next) => {
         return next(err);
       }
       //Redirect to the client URL with the user's ID as a query parameter
-      res.redirect('http://localhost:3000?id=' + req.user._id);
+      res.redirect(process.env.CLIENT_DEPLOYMENT_URL + '?id=' + req.user._id);
     }, false);
     })(req, res, next);
   };
