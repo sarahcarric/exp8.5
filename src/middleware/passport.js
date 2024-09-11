@@ -28,6 +28,7 @@ passport.use(new GithubStrategy({
     if (profile._json) {
       profile = profile._json
     };
+    console.log('GitHub Profile: ', profile);
     try {
       let email;
       if (profile.emails && profile.emails[0].value) {
