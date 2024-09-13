@@ -1,3 +1,10 @@
+/***********************************************************
+ * @file:   configureSession.js
+ * @desc:   
+ * This file contains the middleware function that 
+ * configures the session for the user.
+ **********************************************************/
+
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
