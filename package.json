@@ -7,7 +7,8 @@
   "scripts": {
     "test": "jest --runInBand",
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "deploy": "powershell -File ./deploy.ps1"
   },
   "keywords": [
     "middleware",
