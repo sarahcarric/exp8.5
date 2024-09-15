@@ -111,14 +111,14 @@ export const verifyUserEmail = async (req, res, next) => {
   let redirectUrl = process.env.CLIENT_DEPLOYMENT_URL;
   try {
     await authService.verifyUserEmail(req.params.token);
-    redirectUrl += '/emailverified';
+    redirectUrl += '?emailverified=true';
     return res.redirect(redirectUrl);
   } catch (err) {
-    redirectUrl += '/emailvalidationerror';
+    redirectUrl += '?emailverified=false';
     if (err.name === 'JsonWebTokenError') {
-      redirectUrl += '?reason=invalidtoken';
+      redirectUrl += '&reason=invalidtoken';
     } else {
-      redirectUrl += '?reason=other'; 
+      redirectUrl += '&reason=other'; 
     }
     if (req.params.token) {
       const decodedToken = jwt.decode(req.params.token);
