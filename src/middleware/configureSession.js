@@ -21,7 +21,6 @@ export const configureSession = (req, res, next, sendResponse = true) => {
   const antiCsrfToken = crypto.randomBytes(32).toString('hex');
   res.cookie('accessToken', accessToken, cookieOptions);
   res.cookie('refreshToken', refreshToken, {...cookieOptions, maxAge: 604800000 });
-  //req.session.user = req.user;
   req.session.userId = req.user._id;
   req.session.userRole = req.user.accountInfo.role;
   req.session.antiCsrfToken = antiCsrfToken;

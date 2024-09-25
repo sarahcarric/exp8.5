@@ -100,7 +100,7 @@ export default {
       const virtuals = tempRoundDoc.toObject(); // Virtuals are included by default
       delete virtuals.id;
       // Merge virtual fields into the original round object, preserving original values
-      return { ...virtuals, ...round };
+      return { ...virtuals, ...round };**
     });
     
     delete user.accountInfo.password;
@@ -263,9 +263,7 @@ export default {
    *************************************************************************/
 
   enableMfa: async (userId) => {
-    //console.log("In enableMfa with userId: ", userId);
     const user  = await User.findById(userId);
-    //console.log("In enableMfa with user: ", user);
     if (!user) {
       throw new UserNotFoundError('User with id ' + userId + ' not found');
     }
@@ -278,8 +276,6 @@ export default {
     user.accountInfo.mfaSecret = encryptMfaSecret(secret);
     user.accountInfo.mfaVerified = false;
     await user.save();
-    //console.log("In enableFma with secret: ", secret);
-    //console.log("In enableMfa with qrCodeDataUrl: ", qrCodeDataUrl);
     return {secret, qrCodeDataUrl};
   },
 
