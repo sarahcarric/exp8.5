@@ -100,7 +100,7 @@ export default {
       const virtuals = tempRoundDoc.toObject(); // Virtuals are included by default
       delete virtuals.id;
       // Merge virtual fields into the original round object, preserving original values
-      return { ...virtuals, ...round };**
+      return { ...virtuals, ...round };
     });
     
     delete user.accountInfo.password;
