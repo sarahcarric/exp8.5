@@ -19,7 +19,6 @@ import roundRouter from './routes/roundRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 import rateLimiter from './middleware/rateLimiter.js';
-import setupSwagger from './swagger.js';
 
 dotenv.config();
 
@@ -28,10 +27,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const connectStr = process.env.MONGODB_URI;
 const isProduction = process.env.NODE_ENV === 'production';
 
-const mongoClient = new MongoClient(connectStr, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+const mongoClient = new MongoClient(connectStr);
 
 //Connect to MongoDB database using Mongoose library
 mongoose.connect(connectStr)
@@ -91,9 +87,6 @@ app.options('*', cors(corsOptions));
 
 // Initialize Passport
 app.use(passport.initialize());
-
-// Set up Swagger API documentation
-setupSwagger(app);
 
 // Install app routes
 app.use(userRouter);

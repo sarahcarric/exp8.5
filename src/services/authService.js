@@ -105,7 +105,7 @@ export default {
     
     delete user.accountInfo.password;
     delete user.accountInfo.emailVerified;
-    delete user.verificationDueBy;
+    delete user.accountInfo.verificationDueBy;
     delete user.accountInfo.passResetToken;
     delete user.accountInfo.passResetVerifiedToken;
     delete user.accountInfo.mfaSecret;
@@ -132,8 +132,14 @@ export default {
     await user.save();
     const userObject = user.toObject();
     delete userObject.accountInfo.password;
-    delete userObject.accountInfo.securityQuestion;
-    delete userObject.accountInfo.securityAnswer;
+    delete userObject.accountInfo.emailVerified;
+    delete userObject.accountInfo.verificationDueBy;
+    delete userObject.accountInfo.passResetToken;
+    delete userObject.accountInfo.passResetVerifiedToken;
+    delete userObject.accountInfo.mfaSecret;
+    delete userObject.accountInfo.mfaVerified;
+    delete userObject.accountInfo.mfaAttempts;
+    delete userObject.accountInfo.mfaStartTime;
     delete userObject.__v;
     return userObject;
   },

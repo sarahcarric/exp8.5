@@ -12,135 +12,25 @@ import { configureSession } from '../middleware/configureSession.js';
 
 const authRouter = express.Router();
 
-/**
- * @swagger
- * /auth/login:
- *   post:
- *     summary: Login a user
- *     description: Authenticate a user using their email and password.
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: user@example.com
- *               password:
- *                 type: string
- *                 example: Password1
- *     responses:
- *       200:
- *         description: User logged in successfully
-*         headers:
- *           Set-Cookie:
- *             description: HTTP-only cookies containing the access and refresh tokens.
- *             schema:
- *               type: array
- *               items:
- *                 type: string
- *                 examples:
- *                   accessToken:
- *                     summary: Access token
- *                     value: accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=None
- *                   refreshToken:
- *                     summary: Refresh token
- *                     value: refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=None
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               allOf:
- *                 - $ref: '#/components/schemas/User'
- *       400:
- *         $ref: '#/components/responses/ValidationError'
- *       404:
- *        $ref: '#/components/responses/NotFoundError'
- *       429:
- *         $ref: '#/components/responses/TooManyRequestsError'
- *       500:
- *         $ref: '#/components/responses/GeneralError'
- */
+/***********************************************************************
+ * @route POST /auth/login
+ * @desc Log in a user.
+ * @access Public
+ * ********************************************************************/
 authRouter.post('/auth/login', validateUserLogin, authController.loginUser, configureSession);
 
-/**
- * @swagger
- * /auth/logout/{userId}:
- *   delete:
- *     summary: Logout a user
- *     description: Logs out the user by invalidating their session and clearing authentication cookies.
- *     tags: [Auth]
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: The ID of the user to log out
- *     security:
- *       - cookieAuthAccessToken: []
- *       - antiCsrfToken: []
- *     responses:
- *       200:
- *         description: User logged out successfully
- *         headers:
- *           Set-Cookie:
- *             description: Clears the authentication cookies.
- *             schema:
- *               type: array
- *               items:
- *                 type: string
- *                 examples:
- *                   accessToken:
- *                     summary: Access token
- *                     value: accessToken=; HttpOnly; Secure; SameSite=None; Expires=Thu, 01 Jan 1970 00:00:00 GMT
- *                   refreshToken:
- *                     summary: Refresh token
- *                     value: refreshToken=; HttpOnly; Secure; SameSite=None; Expires=Thu, 01 Jan 1970 00:00:00 GMT
- *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
- */
+/***********************************************************************
+ * @route DELETE /auth/logout/:userId
+ * @desc Log out a user.
+ * @access Private
+ * ********************************************************************/
 authRouter.delete('/auth/logout/:userId', authorize, authController.logoutUser);
 
-/**
- * @swagger
- * /auth/register:
- *   post:
- *     summary: Register a new user
- *     description: Create a new, unverified user account and email the user a verification link they must click to activate their account.
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: user@example.com
- *               password:
- *                 type: string
- *                 example: password123
- *     responses:
- *       201:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       400:
- *         $ref: '#/components/responses/ValidationError'
- *       409:
- *        $ref: '#/components/responses/DuplicateKeyError'
- *       429:
- *        $ref: '#/components/responses/TooManyRequestsError'
- *       500:
- *         $ref: '#/components/responses/GeneralError'
- */
+/***********************************************************************
+ * @route POST /auth/register
+ * @desc Register a new user.
+ * @access Public
+ * ********************************************************************/
 authRouter.post('/auth/register', validateUserRegistration, authController.registerUser);
 
 /***********************************************************************
