@@ -1,11 +1,10 @@
 //process.env.DEBUG = 'nock.*'; // Enable nock debugging
 import session from 'supertest-session';
 import * as emailService from '../../services/emailService.js';
-import { app, server } from '../../server.js'; 
+import { app, server, mongoClient } from '../../server.js'; 
 import { registerUser, verifyAccountEmail, generateRandomEmail, 
           generateValidPassword, registerUserViaGitHubOAuth } 
           from '../../utils/testUtils.js';
-import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import User from '../../models/User';
 import nock from 'nock';
@@ -33,6 +32,12 @@ describe('GitHub Authentication Routes', () => {
   afterAll(async () => {
     await User.deleteMany({}); // Clear the users collection after all tests
     await mongoose.connection.close(); // Close MongoDB connection
+    try {
+      await mongoClient.close(); // Close MongoClient connection
+      console.log('MongoClient connection closed');
+    } catch (error) {
+      console.log('Error closing MongoClient connection:', error);
+    }
     await new Promise(resolve => server.close(resolve)); // Close the server
   });
 

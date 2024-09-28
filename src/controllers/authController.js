@@ -259,6 +259,7 @@ export const getAntiCsrfToken = (req, res) => {
  * @desc Authenticate the user using the GitHub strategy by redirecting
  *      them to the GitHub login page. Scope is set to 'user:email' and
  *     'read:user' to request access to the user's email and profile.
+ *     A random OAuth token is generated and set as a cookie.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @returns {void}
@@ -290,7 +291,7 @@ export const githubCallback = (req, res, next) => {
 
   if (req.query.state !== oauthToken) {
     console.error('State token mismatch');
-    return next(new InvalidOauthTokenError("State token returned by Github does not match session token"));
+    return next(new InvalidOauthTokenError("State token returned by Github does not match token passed to GitHub"));
   }
 
   passport.authenticate('github', (err, user) => {

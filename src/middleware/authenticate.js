@@ -44,7 +44,15 @@ export const authenticate = (req, res, next) => {
             maxAge: 3600000
           };
           const newAccessToken = jwt.sign({ userId: decoded.userId }, process.env.JWT_SECRET, { expiresIn: process.env.ACCESS_TOKEN_DURATION });
-          res.cookie('accessToken', accessToken, cookieOptions); //refresh the access token
+          res.cookie('accessToken', newAccessToken, cookieOptions); //refresh the access token
+          req.session.antiCsrfToken = crypto.randomBytes(32).toString('hex'); //Refresh anti-csrf token
+          req.session.save((err) => {
+            if (err) {
+              return res.status(500).json({ message: 'Failed to save session' });
+            } else {
+              next();
+            }
+          });
           next();
         } catch (err) {
           if (err.name === 'TokenExpiredError') {

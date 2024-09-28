@@ -105,6 +105,7 @@ export default {
     
     delete user.accountInfo.password;
     delete user.accountInfo.emailVerified;
+    delete user.verificationDueBy;
     delete user.accountInfo.passResetToken;
     delete user.accountInfo.passResetVerifiedToken;
     delete user.accountInfo.mfaSecret;

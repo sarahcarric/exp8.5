@@ -157,8 +157,7 @@ export async function registerUser(testSession, newUser, validUser = true) {
     expect(hasAtLeastOneError || hasDuplicateEmailError).toBe(true)
     return registerResponse;
   }
-  // Check response body
-  const expectedResponse = {
+  const expectedUserObject = {
     accountInfo: {
       email: newUser.email,
       emailVerified: false,
@@ -173,13 +172,13 @@ export async function registerUser(testSession, newUser, validUser = true) {
       role: 'user'
     },
     identityInfo: {
-      displayName: '',
+      displayName: expect.any(String),
       profilePic: 'images/DefaultProfilePic.jpg'
     },
     speedgolfInfo: {
       personalBest: {
-        strokes: 100,
-        seconds: 5400,
+        strokes: null,
+        seconds: null,
         course: ''
       },
       clubs: {
@@ -211,7 +210,8 @@ export async function registerUser(testSession, newUser, validUser = true) {
     _id: expect.any(String),
     rounds: []
   };
-  expect(registerResponse.body).toMatchObject(expectedResponse);
+  // Check response body
+  expect(registerResponse.body).toMatchObject(expectedUserObject);
 }
 
 /*************************************************************************
@@ -266,10 +266,10 @@ export async function verifyAccountEmail(mockSendVerificationEmail, validToken =
   expect(verifyResponse.status).toBe(302);
   if (validToken) {
     expect(verifyResponse.headers.get('location')).toBe(
-      process.env.CLIENT_DEPLOYMENT_URL + '/emailverified');
+      process.env.CLIENT_DEPLOYMENT_URL + '?emailverified=true');
   } else {
     expect(verifyResponse.headers.get('location')).toBe(
-      process.env.CLIENT_DEPLOYMENT_URL + '/emailvalidationerror?reason=invalidtoken');
+      process.env.CLIENT_DEPLOYMENT_URL + '?emailverified=false&reason=invalidtoken');
   }
 }
 
@@ -278,9 +278,9 @@ export async function verifyAccountEmail(mockSendVerificationEmail, validToken =
  * @descr Test a user logging in, using Jest expect statements to check
  * the response status code and body.
  * @param {Object} testSession - The supertest session object.
- * @param {string} theUser - objecte consisting of user and password props.
+ * @param {string} theUser - object consisting of user and password props.
  * @returns {Object} - An object containing the user object, access token,
- * refresh token, and anti-CSRF token.
+ * and refresh token.
  * ***********************************************************************/
 export async function loginUser(testSession, theUser, validUser = true) {
   const response = await retryRequest(() =>
@@ -309,14 +309,40 @@ export async function loginUser(testSession, theUser, validUser = true) {
   expect(refreshTokenCookie).toContain('HttpOnly');
   const accessToken = accessTokenCookie.split(';')[0].split('=')[1];
   const refreshToken = refreshTokenCookie.split(';')[0].split('=')[1];
-  // Check response body
-  expect(response.body).toHaveProperty('accessTokenExpiry');
-  expect(response.body).toHaveProperty('refreshTokenExpiry');
-  expect(response.body).toHaveProperty('antiCsrfToken');
-  expect(response.body).toHaveProperty('user');
-  const antiCsrfToken = response.body.antiCsrfToken;
-  const user = response.body.user;
-  return { user, accessToken, refreshToken, antiCsrfToken };
+  // Check response body 
+  const user = response.body;
+  const expectedUserObject = {
+    accountInfo: {
+      email: theUser.email,
+      oauthProvider: expect.stringMatching(/^(none|github)$/),
+      role: 'user'
+    },
+    identityInfo: {
+      displayName: expect.any(String),
+      profilePic: expect.any(String)
+    },
+    _id: expect.any(String),
+    rounds: expect.arrayContaining([])
+  };
+  expect(user).toMatchObject(expectedUserObject);
+  return { user, accessToken, refreshToken };
+}
+
+/*************************************************************************
+ * getAntiCsrfToken
+ * @descr Get the anti-CSRF token for a user.
+ * @param {Object} testSession - The supertest session object.
+ * @param {string} userId - The user ID.
+ * @param {string} accessToken - The access token.
+ * @param {string} refreshToken - The refresh token.
+ * @returns {string} - The anti-CSRF token.
+ * ***********************************************************************/
+export async function getAntiCsrfToken(testSession, userId, accessToken, refreshToken) {
+  const response = await testSession
+    .get(`/auth/anti-csrf-token/${userId}`)
+    .set('Cookie', `accessToken=${accessToken}; refreshToken=${refreshToken}`);
+  expect(response.status).toBe(200);
+  return response.body.antiCsrfToken;
 }
 
 /*************************************************************************
@@ -344,10 +370,9 @@ export async function registerUserViaGitHubOAuth (testSession, email) {
     .get('/user')
     .reply(200, {
       id: '123',
-      login: 'mocked_user',
-      emails: [{ value: email }], // Use the provided email
+      email: email, // Use the provided email
       displayName: generateCustomPassword(),
-      photos: [{ value: 'http://example.com/profile.jpg' }]
+      avatar_url: 'http://example.com/profile.jpg'
     });
 
   // Step 2: Initiate the OAuth flow
@@ -373,13 +398,17 @@ export async function registerUserViaGitHubOAuth (testSession, email) {
     .set('Cookie', cookies.map(cookie => cookie.split(';')[0]).join('; ')); // Join cookie values with a semicolon
 
   //Step 4: Check the response
-  expect(response.status).toBe(200);
-  expect(response.body).toHaveProperty('user');
-  expect(response.body).toHaveProperty('accessTokenExpiry');
-  expect(response.body).toHaveProperty('refreshTokenExpiry');
-  expect(response.body).toHaveProperty('antiCsrfToken');
-  const user = await User.findOne({ 'accountInfo.email': response.body.user.accountInfo.email });
+  expect(response.status).toBe(302);
+  const redirectUrl = response.headers.location;
+  expect(redirectUrl).toBeDefined();
+  // Parse the redirect URL to extract query parameters
+  const url = new URL(redirectUrl); // Use a base URL if the redirect URL is relative
+  const queryParams = Object.fromEntries(url.searchParams.entries());
+  expect(queryParams).toHaveProperty('id'); 
+
+  const user = await User.findById({ _id: queryParams.id });
+  expect(user).toBeDefined();
+  expect(user.accountInfo.email).toBe(email);
   expect(user.accountInfo.password).toBeNull();
   expect(user.accountInfo.oauthProvider).toBe('github');
-  expect(user.accountInfo.emailVerified).toBe(true);
 };

@@ -6,7 +6,6 @@ import express from 'express';
 import * as authController from '../controllers/authController.js';
 import { validateUserLogin, validateUserRegistration } from '../middleware/dataValidator.js';
 import { authenticate } from '../middleware/authenticate.js';
-import { validateRefreshToken } from '../middleware/validateRefreshToken.js';
 import { authorize } from '../middleware/authorize.js';
 import { csrfProtection } from '../middleware/csrfProtection.js';
 import { configureSession } from '../middleware/configureSession.js';
@@ -179,15 +178,6 @@ authRouter.post('/auth/reset-password/verify', authController.verifyPasswordRese
  * @access Public
   * *********************************************************************/
 authRouter.post('/auth/reset-password/complete', authController.completePasswordReset);
-
-/***********************************************************************
- * @route POST /auth/refresh-token
- * @desc Refresh the user's JWT.
- * @access Public
- * @returns {Object} - An object containing the users's new access
- *                    token and its expiration date.
- * *********************************************************************/
-authRouter.post('/auth/refresh-token/:userId', validateRefreshToken, authorize, authController.refreshToken);
 
 /***********************************************************************
  * @route POST /auth/:userId/mfa/enable

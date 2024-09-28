@@ -1,11 +1,12 @@
 import session from 'supertest-session';
-import {app, server} from '../../server.js';
+import {app, server, mongoClient} from '../../server.js';
 import * as emailService from '../../services/emailService';
 import { generateRandomEmail, generateValidPassword, registerUser,
-         verifyAccountEmail, loginUser, 
+         verifyAccountEmail, loginUser, getAntiCsrfToken,
          retryRequest} from '../../utils/testUtils.js';
 import mongoose from 'mongoose';
 import { authenticator } from 'otplib';
+import User from '../../models/User.js';
 
 //Array of users to test; adjust number of users as needed
 const newUsers = Array(1).fill(null).map(() => ({
@@ -26,6 +27,12 @@ describe('Test enable MFA workflow', () => {
 
     afterAll(async() => {
       await mongoose.connection.close();
+      try {
+        await mongoClient.close();
+        console.log('MongoClient connection closed');
+      } catch (error) {
+        console.log('Error closing MongoClient connection:', error);
+      }
       await new Promise(resolve => server.close(resolve));
     });
 
@@ -45,8 +52,8 @@ describe('Test enable MFA workflow', () => {
         loggedInUser = await loginUser(testSession, newUser);
       });
     
-
       it('should start the process of enabling MFA', async () => {
+        loggedInUser.antiCsrfToken = await getAntiCsrfToken(testSession, loggedInUser.user._id, loggedInUser.accessToken, loggedInUser.refreshToken);
         const response = await retryRequest(async() =>
           testSession
             .post(`/auth/mfa/enable/${loggedInUser.user._id}`)
@@ -187,16 +194,10 @@ describe('Test enable MFA workflow', () => {
         expect(response.body).toHaveProperty('message', 'MFA code verified');
         });
       
-      //Use GET /users/:userId to confirm that MFA is enabled
+      //Confirm that MFA is enabled
       it('should confirm that MFA is enabled for the user', async () => {
-        const response = await retryRequest(async() =>
-          testSession
-            .get(`/users/${loggedInUser.user._id}`)
-            .set('x-anti-csrf-token', loggedInUser.antiCsrfToken)
-            .set('Cookie', `accessToken=${loggedInUser.accessToken}; refreshToken=${loggedInUser.refreshToken}`)
-        );
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('accountInfo.mfaVerified', true);
+        const user = await User.findById(loggedInUser.user._id);
+        expect(user.accountInfo.mfaVerified).toBe(true);
       });
 
       //Delete the user to leave no trace

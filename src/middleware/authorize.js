@@ -50,7 +50,13 @@ const accessRules = {
       'DELETE': (resourceId, userId) => {
         return (resourceId === userId);
       },
-      'GET': () => true
+      'GET': (resourceId, userId) => {
+        if (!resourceId || resourceId === userId) {
+          return true;
+        } else { //Get another user's info
+          return false;
+        }
+      }
     },
     'auth': {
       'POST': (resourceId, userId) => {

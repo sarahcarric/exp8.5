@@ -7,7 +7,7 @@
 
 // Import the necessary modules and services
 import session from 'supertest-session';
-import {app, server} from '../../server.js'; // Ensure your server exports the Express app
+import {app, server, mongoClient} from '../../server.js'; // Ensure your server exports the Express app
 import * as emailService from '../../services/emailService';
 import { generateRandomEmail, generateValidPassword, generateCustomPassword,
         registerUser, verifyAccountEmail, requestResendVerificationEmail} from '../../utils/testUtils.js';
@@ -57,6 +57,12 @@ describe('Test routes to register new users and verify their email addresses', (
   afterAll(async() => {
     jest.clearAllMocks(); // Clear all mocks after all tests
     await mongoose.connection.close();
+    try {
+      await mongoClient.close();
+      console.log('MongoClient connection closed');
+    } catch (error) {
+      console.log('Error closing MongoClient connection:', error);
+    }
     await new Promise(resolve => server.close(resolve));
   });
 

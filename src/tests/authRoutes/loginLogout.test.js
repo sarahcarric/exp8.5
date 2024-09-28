@@ -1,9 +1,10 @@
 import session from 'supertest-session';
-import {app, server} from '../../server.js'; // Ensure your server exports the Express app
+import {app, server, mongoClient} from '../../server.js'; // Ensure your server exports the Express app
 import * as emailService from '../../services/emailService.js';
 import {generateRandomEmail, generateValidPassword, registerUser, 
         verifyAccountEmail, loginUser, 
-        retryRequest} from '../../utils/testUtils.js';
+        retryRequest,
+        getAntiCsrfToken} from '../../utils/testUtils.js';
 import mongoose from 'mongoose';
 import User from '../../models/User.js';
 const numTestRounds = 1;
@@ -31,6 +32,12 @@ describe('Test Log in and log out routes', () => {
       await User.findOneAndDelete({ 'accountInfo.email': newUser.email });
     }));
     await mongoose.connection.close();
+    try {
+      await mongoClient.close();
+      console.log('MongoClient connection closed');
+    } catch (error) {
+      console.log('Error closing MongoClient connection:', error);
+    }
     await new Promise(resolve => server.close(resolve));
   });
 
@@ -57,10 +64,11 @@ describe('Test Log in and log out routes', () => {
 
    //Test the /auth/logout route
    it('should log out the user', async () => {
+      const antiCsrfToken = getAntiCsrfToken(testSession, loggedInUser.user._id, loggedInUser.accessToken, loggedInUser.refreshToken);
       const response = await retryRequest(async() => 
         testSession
           .delete(`/auth/logout/${loggedInUser.user._id}`)
-          .set('x-anti-csrf-token', loggedInUser.antiCsrfToken)
+          .set('x-anti-csrf-token', antiCsrfToken)
           .set('Cookie', `accessToken=${loggedInUser.accessToken}; refreshToken=${loggedInUser.refreshToken}`)
       );
       expect(response.statusCode).toBe(200);
