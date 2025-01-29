@@ -1,0 +1,2 @@
+# Exploration 8.5 Code: SpeedScore API Test Suites
+This repository demonstrates best practices for constructing test suites for a back-end web API. We focus in Exploration 8.5 on the routes for creating a new user account. Our testing approach includes both integration and unit tests. The `main` branch contains the code for the SpeedScore back-end app without tests. The `tests/register-user` branch includes the code developed in Exploration 8.5.
