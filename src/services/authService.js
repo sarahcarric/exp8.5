@@ -171,15 +171,23 @@ export default {
    * @returns {Promise<boolean>} True if the user's email is verified.
    *************************************************************************/
   verifyUserEmail: async (token) => {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({"accountInfo.email": decoded.email });
-    if (!user) {
-      throw new UserNotFoundError('User with email ' + decoded.email + ' not found');
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findOne({"accountInfo.email": decoded.email });
+      if (!user) {
+        throw new UserNotFoundError('User with email ' + decoded.email + ' not found');
+     }
+      user.accountInfo.emailVerified = true;
+     user.accountInfo.verificationDueBy = null;
+     await user.save();
+     return true;
+    } catch (err) {
+      if (err instanceof jwt.TokenExpiredError) {
+        console.error('TokenExpiredError caught:', err);
+        throw err;
+      }
+      throw err;
     }
-    user.accountInfo.emailVerified = true;
-    user.accountInfo.verificationDueBy = null;
-    await user.save();
-    return true;
   },
 
   /***********************************************************************
@@ -194,7 +202,7 @@ export default {
       throw new UserNotFoundError('User with email ' + email + ' not found');
     }
     if (user.accountInfo.emailVerified) {
-      throw new UserAlreadyVerfiedError("User's email already verified");
+      throw new UserAlreadyVerifiedError("User's email already verified");
     }
     const verificationToken = jwt.sign({email: email}, process.env.JWT_SECRET, { expiresIn: '1d' });
     user.accountInfo.verificationDueBy = new Date(Date.now() + 1000*60*60*24); //24 hours from now
