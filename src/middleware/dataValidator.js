@@ -38,7 +38,6 @@ export const validateUserRegistration = (req, res, next) => {
     email: Joi.string().trim().required().pattern(emailRegex)
       .message('is not a valid email address'),
     password: Joi.string().required().min(8)
-      .pattern(passwordRegEx)
       .message('must be at least 8 characters long and contain at least one number and one uppercase letter')
   });
   const { error } = registrationSchema.validate(req.body, { abortEarly: false });

@@ -1,0 +1,497 @@
+
+> speedscore-backend@1.0.0 test
+> jest --runInBand --detectOpenHandles --forceExit --verbose
+
+FAIL tests/registerUser/unit/registration-service.test.js
+  Registration Service
+    registerUser
+      ✓ should successfully register a new user (6 ms)
+      ✓ should not expose sensitive fields in response (2 ms)
+      ✓ should handle database errors during registration (37 ms)
+  verifyUserEmail
+    ✓ should successfully verify user email (2 ms)
+    ✕ should handle expired verification tokens (2 ms)
+    ✓ should handle user not found during verification (17 ms)
+  resendVerificationEmail
+    ✓ should successfully resend verification email (2 ms)
+    ✓ should handle non-existent user (2 ms)
+    ✓ should handle already verified email (4 ms)
+    ✓ should handle database errors during save (3 ms)
+    ✓ should update verification due date to 24 hours from now (2 ms)
+  Registration Service Error Handling and Edge Cases
+    ✓ should handle database transaction failures during registration (3 ms)
+    ✓ should handle email service failures gracefully (4 ms)
+    ✕ should handle JWT token verification failures (12 ms)
+    ✓ should handle rate limiting scenarios (3 ms)
+    ✓ should handle multiple concurrent registration attempts (4 ms)
+  Registration Service Edge Cases
+    ✕ should hash a maximum length (100 chars) password (16 ms)
+    ✕ should hash a minimum length (8 chars) password (10 ms)
+    ✕ should reject a password missing uppercase letters (2 ms)
+    ✕ should allow valid emails with special characters (10 ms)
+    ✕ should allow unicode characters in email if supported (1 ms)
+
+  ● verifyUserEmail › should handle expired verification tokens
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: false
+
+      126 |       });
+      127 |     
+    > 128 |       await expect(authService.verifyUserEmail(validToken))
+          |             ^
+      129 |         .rejects
+      130 |         .toThrow(jwt.TokenExpiredError);
+      131 |     });
+
+      at expect (node_modules/expect/build/index.js:113:15)
+      at expect (tests/registerUser/unit/registration-service.test.js:128:13)
+      at call (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Generator.tryCatch (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Generator._invoke [as next] (tests/registerUser/unit/registration-service.test.js:2:1)
+      at asyncGeneratorStep (tests/registerUser/unit/registration-service.test.js:2:1)
+      at asyncGeneratorStep (tests/registerUser/unit/registration-service.test.js:2:1)
+      at _next (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Object.<anonymous> (tests/registerUser/unit/registration-service.test.js:2:1)
+
+  ● Registration Service Error Handling and Edge Cases › should handle JWT token verification failures
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: false
+
+      263 |     mockJwtVerifyFailure();
+      264 |     User.findOne.mockResolvedValue(mockUser);
+    > 265 |     await expect(authService.verifyUserEmail('badtoken')).rejects.toThrow('JWT verification failed');
+          |           ^
+      266 |   });
+      267 |
+      268 |   it('should handle rate limiting scenarios', async () => {
+
+      at expect (node_modules/expect/build/index.js:113:15)
+      at expect (tests/registerUser/unit/registration-service.test.js:265:11)
+      at call (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Generator.tryCatch (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Generator._invoke [as next] (tests/registerUser/unit/registration-service.test.js:2:1)
+      at asyncGeneratorStep (tests/registerUser/unit/registration-service.test.js:2:1)
+      at asyncGeneratorStep (tests/registerUser/unit/registration-service.test.js:2:1)
+      at _next (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Object.<anonymous> (tests/registerUser/unit/registration-service.test.js:2:1)
+
+  ● Registration Service Edge Cases › should hash a maximum length (100 chars) password
+
+    RangeError: Maximum call stack size exceeded
+
+      at W.int (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:8:7945)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16241)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+
+  ● Registration Service Edge Cases › should hash a minimum length (8 chars) password
+
+    RangeError: Maximum call stack size exceeded
+
+      at W.int (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:8:7945)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16241)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+
+  ● Registration Service Edge Cases › should reject a password missing uppercase letters
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: {"_id": "mockUserId", "accountInfo": {"email": "test@example.com"}, "save": [Function mockConstructor], "toObject": [Function mockConstructor]}
+
+      312 |       password: 'password1234'
+      313 |     };
+    > 314 |     await expect(authService.registerUser(newUserData)).rejects.toThrow();
+          |           ^
+      315 |   });
+      316 |
+      317 |   it('should allow valid emails with special characters', async () => {
+
+      at expect (node_modules/expect/build/index.js:113:15)
+      at expect (tests/registerUser/unit/registration-service.test.js:314:11)
+      at call (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Generator.tryCatch (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Generator._invoke [as next] (tests/registerUser/unit/registration-service.test.js:2:1)
+      at asyncGeneratorStep (tests/registerUser/unit/registration-service.test.js:2:1)
+      at asyncGeneratorStep (tests/registerUser/unit/registration-service.test.js:2:1)
+      at _next (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Object.<anonymous> (tests/registerUser/unit/registration-service.test.js:2:1)
+
+  ● Registration Service Edge Cases › should allow valid emails with special characters
+
+    RangeError: Maximum call stack size exceeded
+
+      at W.int (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:8:7945)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16241)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+      at a (node_modules/@faker-js/faker/dist/chunk-ZKNYQOPP.cjs:1:16331)
+
+  ● Registration Service Edge Cases › should allow unicode characters in email if supported
+
+    TypeError: _faker.faker.datatype.number is not a function
+
+      326 |   it('should allow unicode characters in email if supported', async () => {
+      327 |     const newUserData = {
+    > 328 |       email: `üñîçødë+${faker.datatype.number()}@example.com`,
+          |                                        ^
+      329 |       password: faker.internet.password({ length: 12, pattern: /(?=.*[0-9])(?=.*[A-Z])/ })
+      330 |     };
+      331 |     try {
+
+      at number (tests/registerUser/unit/registration-service.test.js:328:40)
+      at call (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Generator.tryCatch (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Generator._invoke [as next] (tests/registerUser/unit/registration-service.test.js:2:1)
+      at asyncGeneratorStep (tests/registerUser/unit/registration-service.test.js:2:1)
+      at asyncGeneratorStep (tests/registerUser/unit/registration-service.test.js:2:1)
+      at _next (tests/registerUser/unit/registration-service.test.js:2:1)
+      at Object.<anonymous> (tests/registerUser/unit/registration-service.test.js:2:1)
+
+PASS tests/registerUser/unit/controllers/registration-controller.test.js
+  Registration Controller
+    registerUser
+      ✓ should successfully register a new user (3 ms)
+      ✓ should pass error to next middleware if registration fails (2 ms)
+    verifyUserEmail
+      ✓ should redirect with success when verification succeeds (2 ms)
+      ✓ should redirect with error for invalid token (3 ms)
+    resendVerificationEmail
+      ✓ should successfully resend verification email (1 ms)
+      ✓ should handle user not found error (9 ms)
+
+  console.warn
+    API key does not start with "SG.".
+
+      23 | dotenv.config();
+      24 |
+    > 25 | sgMail.setApiKey(process.env.SENDGRID_API_KEY); 
+         |        ^
+      26 |
+      27 | const connectStr = process.env.MONGODB_URI;
+      28 | const isProduction = process.env.NODE_ENV === 'production';
+
+      at Client.setApiKey (node_modules/@sendgrid/client/src/classes/client.js:50:15)
+      at MailService.setApiKey (node_modules/@sendgrid/mail/src/classes/mail-service.js:38:17)
+      at Object.setApiKey (src/server.js:25:8)
+      at Object.require (tests/registerUser/integration/register-user.test.js:7:1)
+
+FAIL tests/registerUser/integration/register-user.test.js
+  ● Test suite failed to run
+
+    TypeError: Cannot read properties of undefined (reading 'startsWith')
+
+      28 | const isProduction = process.env.NODE_ENV === 'production';
+      29 |
+    > 30 | const mongoClient = new MongoClient(connectStr);
+         |                     ^
+      31 |
+      32 | //Connect to MongoDB database using Mongoose library
+      33 | mongoose.connect(connectStr)
+
+      at connectionStringHasValidScheme (node_modules/mongodb-connection-string-url/src/index.ts:13:22)
+      at new ConnectionString (node_modules/mongodb-connection-string-url/src/index.ts:132:30)
+      at parseOptions (node_modules/mongodb/src/connection_string.ts:245:15)
+      at new MongoClient (node_modules/mongodb/src/mongo_client.ts:359:34)
+      at Object.<anonymous> (src/server.js:30:21)
+      at Object.require (tests/registerUser/integration/register-user.test.js:7:1)
+
+Test Suites: 2 failed, 1 passed, 3 total
+Tests:       7 failed, 20 passed, 27 total
+Snapshots:   0 total
+Time:        2.525 s
+Ran all test suites.

@@ -1,0 +1,30 @@
+
+> speedscore-backend@1.0.0 test
+> jest --runInBand --detectOpenHandles --forceExit --verbose
+
+PASS tests/registerUser/unit/controllers/registration-controller.test.js
+  Registration Controller
+    registerUser
+      ✓ should successfully register a new user (5 ms)
+      ✓ should pass error to next middleware if registration fails (2 ms)
+    verifyUserEmail
+      ✓ should redirect with success when verification succeeds (9 ms)
+      ✓ should redirect with error for invalid token (1 ms)
+    resendVerificationEmail
+      ✓ should successfully resend verification email (2 ms)
+      ✓ should handle user not found error (2 ms)
+
+node:internal/process/promises:389
+      new UnhandledPromiseRejection(reason);
+      ^
+
+UnhandledPromiseRejection: This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). The promise rejected with the reason "function () {
+            return Promise.reject(new Error('Email service failure'));
+          }".
+    at throwUnhandledRejectionsMode (node:internal/process/promises:389:7)
+    at processPromiseRejections (node:internal/process/promises:470:17)
+    at processTicksAndRejections (node:internal/process/task_queues:96:32) {
+  code: 'ERR_UNHANDLED_REJECTION'
+}
+
+Node.js v20.19.0
